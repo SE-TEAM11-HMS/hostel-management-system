@@ -2,7 +2,7 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 
 from .forms import StudentForm
 from .models import Student
@@ -43,4 +43,20 @@ def student_list(request):
         request,
         "students/student_list.html",
         {"students": students},
+    )
+
+
+@login_required
+def student_detail(request, pk):
+    if not request.user.is_staff:
+        return HttpResponseForbidden(
+            "You do not have permission to view student details."
+        )
+
+    student = get_object_or_404(Student, pk=pk)
+
+    return render(
+        request,
+        "students/student_detail.html",
+        {"student": student},
     )
