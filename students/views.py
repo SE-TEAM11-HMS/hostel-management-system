@@ -17,6 +17,7 @@ def add_student(request):
 
     if request.method == "POST":
         form = StudentForm(request.POST)
+
         if form.is_valid():
             form.save()
             messages.success(request, "Student added successfully.")
@@ -24,14 +25,21 @@ def add_student(request):
     else:
         form = StudentForm()
 
-    return render(request, "students/student_form.html", {"form": form})
+    return render(
+        request,
+        "students/student_form.html",
+        {"form": form},
+    )
 
 
 @login_required
 def student_list(request):
     students = Student.objects.all().order_by("name")
+
     return render(
         request,
         "students/student_list.html",
-        {"students": students},
+        {
+            "students": students,
+        },
     )
