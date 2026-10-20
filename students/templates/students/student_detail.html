@@ -22,6 +22,10 @@
     <p><strong>Academic Year:</strong> {{ student.academic_year }}</p>
 
     <p>
+        <a href="{% url 'student_update' student.pk %}">Edit Student</a>
+    </p>
+
+    <p>
         <a href="{% url 'student_list' %}">Back to Student List</a>
     </p>
 </body>

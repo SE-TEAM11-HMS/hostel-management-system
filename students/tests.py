@@ -17,7 +17,6 @@ class StudentModelTest(TestCase):
             department="Computer Science",
             academic_year=2,
         )
-
         self.assertEqual(student.name, "Test Student")
         self.assertEqual(str(student), "1AB23CS002 - Test Student")
 
@@ -30,7 +29,6 @@ class StudentModelTest(TestCase):
             department="Computer Science",
             academic_year=1,
         )
-
         self.assertIsNone(student.user)
 
 
@@ -71,7 +69,6 @@ class StudentFormTest(TestCase):
 class StudentViewTest(TestCase):
     def setUp(self):
         User = get_user_model()
-
         self.admin = User.objects.create_user(
             username="testadmin",
             password="TestAdminPass!234",
@@ -82,7 +79,6 @@ class StudentViewTest(TestCase):
             password="TestUserPass!234",
             is_staff=False,
         )
-
         self.url = reverse("student_add")
         self.list_url = reverse("student_list")
 
@@ -114,67 +110,42 @@ class StudentViewTest(TestCase):
 
     def test_valid_post_creates_student(self):
         self.client.force_login(self.admin)
-        response = self.client.post(
-            self.url, self.valid_student_data()
-        )
-
+        response = self.client.post(self.url, self.valid_student_data())
         self.assertRedirects(response, self.list_url)
-        self.assertTrue(
-            Student.objects.filter(usn="1AB23CS006").exists()
-        )
+        self.assertTrue(Student.objects.filter(usn="1AB23CS006").exists())
 
     def test_success_message_is_displayed(self):
         self.client.force_login(self.admin)
-        response = self.client.post(
-            self.url, self.valid_student_data()
-        )
-
+        response = self.client.post(self.url, self.valid_student_data())
         self.assertRedirects(response, self.list_url, fetch_redirect_response=False)
-
         list_response = self.client.get(self.list_url)
         self.assertContains(list_response, "Student added successfully.")
 
     def test_duplicate_usn_does_not_create_student(self):
         Student.objects.create(
-            usn="1AB23CS030",
-            name="Existing Student",
-            email="existing030@example.com",
-            phone="9876543230",
-            department="Computer Science",
-            academic_year=2,
+            usn="1AB23CS030", name="Existing Student",
+            email="existing030@example.com", phone="9876543230",
+            department="Computer Science", academic_year=2,
         )
-
         self.client.force_login(self.admin)
         response = self.client.post(
             self.url,
-            self.valid_student_data(
-                usn="1AB23CS030",
-                email="duplicate030@example.com",
-            ),
+            self.valid_student_data(usn="1AB23CS030", email="duplicate030@example.com"),
         )
-
         self.assertEqual(response.status_code, 200)
         self.assertEqual(Student.objects.count(), 1)
 
     def test_duplicate_email_does_not_create_student(self):
         Student.objects.create(
-            usn="1AB23CS031",
-            name="Existing Student",
-            email="existing031@example.com",
-            phone="9876543232",
-            department="Computer Science",
-            academic_year=2,
+            usn="1AB23CS031", name="Existing Student",
+            email="existing031@example.com", phone="9876543232",
+            department="Computer Science", academic_year=2,
         )
-
         self.client.force_login(self.admin)
         response = self.client.post(
             self.url,
-            self.valid_student_data(
-                usn="1AB23CS032",
-                email="existing031@example.com",
-            ),
+            self.valid_student_data(usn="1AB23CS032", email="existing031@example.com"),
         )
-
         self.assertEqual(response.status_code, 200)
         self.assertEqual(Student.objects.count(), 1)
 
@@ -182,26 +153,14 @@ class StudentViewTest(TestCase):
         self.client.force_login(self.admin)
         response = self.client.post(
             self.url,
-            {
-                "usn": "",
-                "name": "",
-                "email": "",
-                "phone": "",
-                "department": "",
-                "academic_year": "",
-            },
+            {"usn": "", "name": "", "email": "", "phone": "", "department": "", "academic_year": ""},
         )
-
         self.assertEqual(response.status_code, 200)
         self.assertEqual(Student.objects.count(), 0)
 
     def test_invalid_post_does_not_create_student(self):
         self.client.force_login(self.admin)
-        response = self.client.post(
-            self.url,
-            self.valid_student_data(academic_year=5),
-        )
-
+        response = self.client.post(self.url, self.valid_student_data(academic_year=5))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(Student.objects.count(), 0)
 
@@ -221,12 +180,9 @@ class StudentViewTest(TestCase):
 
     def test_non_admin_is_forbidden_from_student_detail(self):
         student = Student.objects.create(
-            usn="1AB23CS050",
-            name="Detail Student",
-            email="detail@example.com",
-            phone="9876543250",
-            department="Computer Science",
-            academic_year=1,
+            usn="1AB23CS050", name="Detail Student",
+            email="detail@example.com", phone="9876543250",
+            department="Computer Science", academic_year=1,
         )
         self.client.force_login(self.regular_user)
         response = self.client.get(reverse("student_detail", args=[student.pk]))
@@ -239,25 +195,17 @@ class StudentViewTest(TestCase):
 
     def test_update_success_message_is_displayed(self):
         student = Student.objects.create(
-            usn="1AB23CS020",
-            name="Msg Student",
-            email="msg.student@example.com",
-            phone="9876543220",
-            department="Computer Science",
-            academic_year=2,
+            usn="1AB23CS020", name="Msg Student",
+            email="msg.student@example.com", phone="9876543220",
+            department="Computer Science", academic_year=2,
         )
         self.client.force_login(self.admin)
         detail_url = reverse("student_detail", args=[student.pk])
         response = self.client.post(
             reverse("student_update", args=[student.pk]),
-            {
-                "usn": "1AB23CS020",
-                "name": "Msg Student",
-                "email": "msg.student@example.com",
-                "phone": "9876543220",
-                "department": "Computer Science",
-                "academic_year": 2,
-            },
+            {"usn": "1AB23CS020", "name": "Msg Student",
+             "email": "msg.student@example.com", "phone": "9876543220",
+             "department": "Computer Science", "academic_year": 2},
         )
         self.assertRedirects(response, detail_url, fetch_redirect_response=False)
         detail_response = self.client.get(detail_url)
@@ -265,27 +213,17 @@ class StudentViewTest(TestCase):
 
     def test_admin_can_update_student(self):
         student = Student.objects.create(
-            usn="1AB23CS010",
-            name="Old Name",
-            email="old.name@example.com",
-            phone="9876543210",
-            department="Computer Science",
-            academic_year=2,
+            usn="1AB23CS010", name="Old Name",
+            email="old.name@example.com", phone="9876543210",
+            department="Computer Science", academic_year=2,
         )
         self.client.force_login(self.admin)
-
         response = self.client.post(
             reverse("student_update", args=[student.pk]),
-            {
-                "usn": "1AB23CS010",
-                "name": "Updated Name",
-                "email": "updated.name@example.com",
-                "phone": "9876543211",
-                "department": "Information Science",
-                "academic_year": 3,
-            },
+            {"usn": "1AB23CS010", "name": "Updated Name",
+             "email": "updated.name@example.com", "phone": "9876543211",
+             "department": "Information Science", "academic_year": 3},
         )
-
         self.assertEqual(response.status_code, 302)
         student.refresh_from_db()
         self.assertEqual(student.name, "Updated Name")
@@ -294,27 +232,17 @@ class StudentViewTest(TestCase):
 
     def test_invalid_update_does_not_save(self):
         student = Student.objects.create(
-            usn="1AB23CS011",
-            name="Original Name",
-            email="original.name@example.com",
-            phone="9876543210",
-            department="Computer Science",
-            academic_year=2,
+            usn="1AB23CS011", name="Original Name",
+            email="original.name@example.com", phone="9876543210",
+            department="Computer Science", academic_year=2,
         )
         self.client.force_login(self.admin)
-
         response = self.client.post(
             reverse("student_update", args=[student.pk]),
-            {
-                "usn": "1AB23CS011",
-                "name": "Changed Name",
-                "email": "original.name@example.com",
-                "phone": "123",
-                "department": "Computer Science",
-                "academic_year": 5,
-            },
+            {"usn": "1AB23CS011", "name": "Changed Name",
+             "email": "original.name@example.com", "phone": "123",
+             "department": "Computer Science", "academic_year": 5},
         )
-
         self.assertEqual(response.status_code, 200)
         student.refresh_from_db()
         self.assertEqual(student.name, "Original Name")
@@ -322,33 +250,19 @@ class StudentViewTest(TestCase):
 
     def test_non_admin_cannot_update_student(self):
         student = Student.objects.create(
-            usn="1AB23CS012",
-            name="Protected Student",
-            email="protected.student@example.com",
-            phone="9876543210",
-            department="Computer Science",
-            academic_year=2,
+            usn="1AB23CS012", name="Protected Student",
+            email="protected.student@example.com", phone="9876543210",
+            department="Computer Science", academic_year=2,
         )
         self.client.force_login(self.regular_user)
-
-        response = self.client.get(
-            reverse("student_update", args=[student.pk])
-        )
-
+        response = self.client.get(reverse("student_update", args=[student.pk]))
         self.assertEqual(response.status_code, 403)
 
     def test_anonymous_user_cannot_update_student(self):
         student = Student.objects.create(
-            usn="1AB23CS013",
-            name="Private Student",
-            email="private.student@example.com",
-            phone="9876543210",
-            department="Computer Science",
-            academic_year=2,
+            usn="1AB23CS013", name="Private Student",
+            email="private.student@example.com", phone="9876543210",
+            department="Computer Science", academic_year=2,
         )
-
-        response = self.client.get(
-            reverse("student_update", args=[student.pk])
-        )
-
+        response = self.client.get(reverse("student_update", args=[student.pk]))
         self.assertEqual(response.status_code, 302)
