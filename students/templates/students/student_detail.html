@@ -9,9 +9,7 @@
     <h1>Student Details</h1>
 
     {% if messages %}
-        {% for message in messages %}
-            <p>{{ message }}</p>
-        {% endfor %}
+        {% for message in messages %}<p>{{ message }}</p>{% endfor %}
     {% endif %}
 
     <p><strong>USN:</strong> {{ student.usn }}</p>
@@ -21,13 +19,6 @@
     <p><strong>Department:</strong> {{ student.department }}</p>
     <p><strong>Academic Year:</strong> {{ student.academic_year }}</p>
 
-    <p>
-        <a href="{% url 'student_update' student.pk %}">Edit Student</a>
-        <a href="{% url 'student_confirm_delete' student.pk %}">Delete Student</a>
-    </p>
-
-    <p>
-        <a href="{% url 'student_list' %}">Back to Student List</a>
-    </p>
+    <p><a href="{% url 'student_list' %}">Back to Student List</a></p>
 </body>
 </html>

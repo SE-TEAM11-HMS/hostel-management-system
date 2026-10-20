@@ -9,26 +9,17 @@
     <h1>Students</h1>
 
     {% if messages %}
-        {% for message in messages %}
-            <p>{{ message }}</p>
-        {% endfor %}
+        {% for message in messages %}<p>{{ message }}</p>{% endfor %}
     {% endif %}
 
-    <p>
-        <a href="{% url 'student_add' %}">Add Student</a>
-    </p>
+    <p><a href="{% url 'student_add' %}">Add Student</a></p>
 
     {% if students %}
         <table border="1" cellpadding="8">
             <thead>
                 <tr>
-                    <th>USN</th>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Phone</th>
-                    <th>Department</th>
-                    <th>Academic Year</th>
-                    <th>Actions</th>
+                    <th>USN</th><th>Name</th><th>Email</th>
+                    <th>Phone</th><th>Department</th><th>Academic Year</th><th>Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -40,11 +31,7 @@
                         <td>{{ student.phone }}</td>
                         <td>{{ student.department }}</td>
                         <td>{{ student.academic_year }}</td>
-                        <td>
-                            <a href="{% url 'student_detail' student.pk %}">View</a>
-                            <a href="{% url 'student_update' student.pk %}">Edit</a>
-                            <a href="{% url 'student_confirm_delete' student.pk %}">Delete</a>
-                        </td>
+                        <td><a href="{% url 'student_detail' student.pk %}">View</a></td>
                     </tr>
                 {% endfor %}
             </tbody>
