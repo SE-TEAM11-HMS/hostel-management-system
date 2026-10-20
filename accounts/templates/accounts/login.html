@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Administrator Login | Hostel Management System</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            max-width: 480px;
+            margin: 60px auto;
+            padding: 20px;
+            line-height: 1.6;
+            background: #f5f7fa;
+        }
+
+        .container {
+            background: white;
+            padding: 28px;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+        }
+
+        h1 {
+            font-size: 25px;
+            text-align: center;
+        }
+
+        label {
+            display: block;
+            margin-top: 16px;
+            font-weight: bold;
+        }
+
+        input {
+            box-sizing: border-box;
+            width: 100%;
+            padding: 12px;
+            margin-top: 6px;
+            font-size: 16px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 22px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .error {
+            color: #b00020;
+        }
+    </style>
+</head>
+
+<body>
+    <main class="container">
+        <h1>Hostel Management System</h1>
+
+        <p>Administrator Login</p>
+
+        {% if form.non_field_errors %}
+            <div class="error" role="alert" aria-live="polite">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+
+            <input
+                type="hidden"
+                name="next"
+                value="{{ next }}"
+            >
+
+            {% for field in form %}
+                <div>
+                    {{ field.label_tag }}
+
+                    {{ field }}
+
+                    {% for error in field.errors %}
+                        <p class="error" role="alert">
+                            {{ error }}
+                        </p>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+
+            <button type="submit">Login</button>
+        </form>
+    </main>
+</body>
+</html>
