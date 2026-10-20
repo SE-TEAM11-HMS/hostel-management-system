@@ -266,3 +266,46 @@ class StudentViewTest(TestCase):
         )
         response = self.client.get(reverse("student_update", args=[student.pk]))
         self.assertEqual(response.status_code, 302)
+
+    def test_admin_can_delete_student(self):
+        student = Student.objects.create(
+            usn="1AB23CS060", name="Delete Me",
+            email="delete.me@example.com", phone="9876543260",
+            department="Computer Science", academic_year=1,
+        )
+        self.client.force_login(self.admin)
+        response = self.client.post(reverse("student_delete", args=[student.pk]))
+        self.assertRedirects(response, self.list_url, fetch_redirect_response=False)
+        self.assertFalse(Student.objects.filter(pk=student.pk).exists())
+
+    def test_get_request_does_not_delete_student(self):
+        student = Student.objects.create(
+            usn="1AB23CS061", name="No Delete Get",
+            email="nodelete.get@example.com", phone="9876543261",
+            department="Computer Science", academic_year=1,
+        )
+        self.client.force_login(self.admin)
+        response = self.client.get(reverse("student_delete", args=[student.pk]))
+        self.assertEqual(response.status_code, 405)
+        self.assertTrue(Student.objects.filter(pk=student.pk).exists())
+
+    def test_non_admin_cannot_delete_student(self):
+        student = Student.objects.create(
+            usn="1AB23CS062", name="Protected Delete",
+            email="protected.delete@example.com", phone="9876543262",
+            department="Computer Science", academic_year=1,
+        )
+        self.client.force_login(self.regular_user)
+        response = self.client.post(reverse("student_delete", args=[student.pk]))
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue(Student.objects.filter(pk=student.pk).exists())
+
+    def test_anonymous_user_cannot_delete_student(self):
+        student = Student.objects.create(
+            usn="1AB23CS063", name="Anon Delete",
+            email="anon.delete@example.com", phone="9876543263",
+            department="Computer Science", academic_year=1,
+        )
+        response = self.client.post(reverse("student_delete", args=[student.pk]))
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(Student.objects.filter(pk=student.pk).exists())

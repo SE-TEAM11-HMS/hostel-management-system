@@ -43,6 +43,7 @@
                         <td>
                             <a href="{% url 'student_detail' student.pk %}">View</a>
                             <a href="{% url 'student_update' student.pk %}">Edit</a>
+                            <a href="{% url 'student_confirm_delete' student.pk %}">Delete</a>
                         </td>
                     </tr>
                 {% endfor %}
