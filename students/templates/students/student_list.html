@@ -31,7 +31,10 @@
                         <td>{{ student.phone }}</td>
                         <td>{{ student.department }}</td>
                         <td>{{ student.academic_year }}</td>
-                        <td><a href="{% url 'student_detail' student.pk %}">View</a></td>
+                        <td>
+                            <a href="{% url 'student_detail' student.pk %}">View</a>
+                            <a href="{% url 'student_update' student.pk %}">Edit</a>
+                        </td>
                     </tr>
                 {% endfor %}
             </tbody>
