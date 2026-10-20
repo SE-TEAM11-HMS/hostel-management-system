@@ -73,6 +73,8 @@ class StudentViewTest(TestCase):
         data.update(overrides)
         return data
 
+    # --- add student ---
+
     def test_admin_can_open_add_student_form(self):
         self.client.force_login(self.admin)
         self.assertEqual(self.client.get(self.url).status_code, 200)
@@ -136,6 +138,8 @@ class StudentViewTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(Student.objects.count(), 0)
 
+    # --- student list ---
+
     def test_student_list_requires_login(self):
         self.assertEqual(self.client.get(self.list_url).status_code, 302)
 
@@ -146,6 +150,8 @@ class StudentViewTest(TestCase):
     def test_non_admin_is_forbidden_from_student_list(self):
         self.client.force_login(self.regular_user)
         self.assertEqual(self.client.get(self.list_url).status_code, 403)
+
+    # --- student detail ---
 
     def test_non_admin_is_forbidden_from_student_detail(self):
         student = Student.objects.create(
@@ -159,6 +165,8 @@ class StudentViewTest(TestCase):
     def test_nonexistent_student_returns_404(self):
         self.client.force_login(self.admin)
         self.assertEqual(self.client.get(reverse("student_detail", args=[99999])).status_code, 404)
+
+    # --- update student ---
 
     def test_update_success_message_is_displayed(self):
         student = Student.objects.create(
@@ -225,3 +233,95 @@ class StudentViewTest(TestCase):
             department="Computer Science", academic_year=2,
         )
         self.assertEqual(self.client.get(reverse("student_update", args=[student.pk])).status_code, 302)
+
+    # --- delete student ---
+
+    def test_admin_can_delete_student(self):
+        student = Student.objects.create(
+            usn="1AB23CS060", name="Delete Me",
+            email="delete.me@example.com", phone="9876543260",
+            department="Computer Science", academic_year=1,
+        )
+        self.client.force_login(self.admin)
+        response = self.client.post(reverse("student_delete", args=[student.pk]))
+        self.assertRedirects(response, self.list_url, fetch_redirect_response=False)
+        self.assertFalse(Student.objects.filter(pk=student.pk).exists())
+
+    def test_get_request_does_not_delete_student(self):
+        student = Student.objects.create(
+            usn="1AB23CS061", name="No Delete Get",
+            email="nodelete.get@example.com", phone="9876543261",
+            department="Computer Science", academic_year=1,
+        )
+        self.client.force_login(self.admin)
+        response = self.client.get(reverse("student_delete", args=[student.pk]))
+        self.assertEqual(response.status_code, 405)
+        self.assertTrue(Student.objects.filter(pk=student.pk).exists())
+
+    def test_non_admin_cannot_delete_student(self):
+        student = Student.objects.create(
+            usn="1AB23CS062", name="Protected Delete",
+            email="protected.delete@example.com", phone="9876543262",
+            department="Computer Science", academic_year=1,
+        )
+        self.client.force_login(self.regular_user)
+        response = self.client.post(reverse("student_delete", args=[student.pk]))
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue(Student.objects.filter(pk=student.pk).exists())
+
+    def test_anonymous_user_cannot_delete_student(self):
+        student = Student.objects.create(
+            usn="1AB23CS063", name="Anon Delete",
+            email="anon.delete@example.com", phone="9876543263",
+            department="Computer Science", academic_year=1,
+        )
+        response = self.client.post(reverse("student_delete", args=[student.pk]))
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(Student.objects.filter(pk=student.pk).exists())
+
+    # --- search ---
+
+    def test_search_returns_matching_students(self):
+        Student.objects.create(
+            usn="1AB23CS070", name="Alice Smith",
+            email="alice@example.com", phone="9876543270",
+            department="Computer Science", academic_year=1,
+        )
+        Student.objects.create(
+            usn="1AB23CS071", name="Bob Jones",
+            email="bob@example.com", phone="9876543271",
+            department="Information Science", academic_year=2,
+        )
+        self.client.force_login(self.admin)
+        response = self.client.get(self.list_url, {"q": "Alice"})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Alice Smith")
+        self.assertNotContains(response, "Bob Jones")
+
+    def test_search_by_department(self):
+        Student.objects.create(
+            usn="1AB23CS072", name="Carol White",
+            email="carol@example.com", phone="9876543272",
+            department="Mechanical Engineering", academic_year=3,
+        )
+        self.client.force_login(self.admin)
+        response = self.client.get(self.list_url, {"q": "Mechanical"})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Carol White")
+
+    def test_empty_search_returns_all_students(self):
+        Student.objects.create(
+            usn="1AB23CS073", name="Dave Brown",
+            email="dave@example.com", phone="9876543273",
+            department="Computer Science", academic_year=1,
+        )
+        self.client.force_login(self.admin)
+        response = self.client.get(self.list_url, {"q": ""})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Dave Brown")
+
+    def test_search_no_results(self):
+        self.client.force_login(self.admin)
+        response = self.client.get(self.list_url, {"q": "zzznomatch"})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "No matching students found")

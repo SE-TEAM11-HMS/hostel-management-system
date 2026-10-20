@@ -1,6 +1,7 @@
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.db.models import Q
 from django.http import HttpResponseForbidden
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_POST
@@ -31,9 +32,19 @@ def student_list(request):
     if not request.user.is_staff:
         return HttpResponseForbidden("You do not have permission to view students.")
 
+    query = request.GET.get("q", "").strip()
     students = Student.objects.all().order_by("name")
 
-    return render(request, "students/student_list.html", {"students": students})
+    if query:
+        students = students.filter(
+            Q(usn__icontains=query)
+            | Q(name__icontains=query)
+            | Q(email__icontains=query)
+            | Q(phone__icontains=query)
+            | Q(department__icontains=query)
+        )
+
+    return render(request, "students/student_list.html", {"students": students, "query": query})
 
 
 @login_required
