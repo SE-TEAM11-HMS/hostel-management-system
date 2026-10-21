@@ -1,64 +1,30 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Students</title>
-</head>
-<body>
-    <h1>Students</h1>
-
-    {% if messages %}
-        {% for message in messages %}<p>{{ message }}</p>{% endfor %}
-    {% endif %}
-
-    <form method="get" action="{% url 'student_list' %}">
-        <label for="student-search">Search students:</label>
-        <input
-            type="search"
-            id="student-search"
-            name="q"
-            value="{{ query }}"
-            placeholder="Search by USN, name, email, phone, or department"
-        >
-        <button type="submit">Search</button>
-        {% if query %}
-            <a href="{% url 'student_list' %}">Clear search</a>
-        {% endif %}
+{% extends "accounts/base.html" %}
+{% block title %}Student records | HostelHQ{% endblock %}
+{% block section_label %}STUDENT MANAGEMENT{% endblock %}
+{% block page_title %}Student records{% endblock %}
+{% block page_subtitle %}<p class="topbar-subtitle">Search, review, and maintain student information from one place.</p>{% endblock %}
+{% block header_actions %}<a class="button" href="{% url 'student_add' %}">＋ Add student</a>{% endblock %}
+{% block content %}
+<div class="page-intro"><div><h2>Student directory</h2><p>Search by USN, name, email, phone number, or department.</p></div></div>
+<section class="panel directory-panel">
+    <form method="get" action="{% url 'student_list' %}" class="search-bar">
+        <div class="search-field"><span class="search-icon" aria-hidden="true">⌕</span><label for="student-search" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0">Search students</label><input type="search" id="student-search" name="q" value="{{ query }}" placeholder="Search by USN, name, email, phone, or department"></div>
+        <button type="submit" class="button">Search records</button>
+        {% if query %}<a class="clear-link" href="{% url 'student_list' %}">Clear search</a>{% endif %}
     </form>
-
-    <p><a href="{% url 'student_add' %}">Add Student</a></p>
-
     {% if students %}
-        <table border="1" cellpadding="8">
-            <thead>
-                <tr>
-                    <th>USN</th><th>Name</th><th>Email</th>
-                    <th>Phone</th><th>Department</th><th>Academic Year</th><th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for student in students %}
-                    <tr>
-                        <td>{{ student.usn }}</td>
-                        <td>{{ student.name }}</td>
-                        <td>{{ student.email }}</td>
-                        <td>{{ student.phone }}</td>
-                        <td>{{ student.department }}</td>
-                        <td>{{ student.academic_year }}</td>
-                        <td>
-                            <a href="{% url 'student_detail' student.pk %}">View</a>
-                            <a href="{% url 'student_update' student.pk %}">Edit</a>
-                            <a href="{% url 'student_confirm_delete' student.pk %}">Delete</a>
-                        </td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <div class="table-wrap"><table class="student-table">
+            <thead><tr><th>USN</th><th>Student</th><th>Email</th><th>Phone</th><th>Department</th><th>Year</th><th>Actions</th></tr></thead>
+            <tbody>{% for student in students %}<tr>
+                <td><span class="student-id">{{ student.usn }}</span></td><td><span class="student-name">{{ student.name }}</span></td><td>{{ student.email }}</td><td>{{ student.phone }}</td><td>{{ student.department }}</td><td><span class="year-badge">Year {{ student.academic_year }}</span></td>
+                <td><div class="table-actions"><a class="table-action" href="{% url 'student_detail' student.pk %}">View</a><a class="table-action" href="{% url 'student_update' student.pk %}">Edit</a><a class="table-action danger" href="{% url 'student_confirm_delete' student.pk %}">Delete</a></div></td>
+            </tr>{% endfor %}</tbody>
+        </table></div>
+        <div class="table-footer"><span>{% if query %}Results for “{{ query }}”{% else %}Student directory{% endif %}</span><span>{{ students|length }} record{{ students|length|pluralize }} shown</span></div>
     {% elif query %}
-        <p>No matching students found for "{{ query }}".</p>
+        <div class="empty-state"><span class="empty-icon" aria-hidden="true">⌕</span><h3>No matching students found</h3><p>Try another name, USN, email address, phone number, or department.</p><a class="button button-secondary" href="{% url 'student_list' %}">Clear search</a></div>
     {% else %}
-        <p>No students found.</p>
+        <div class="empty-state"><span class="empty-icon" aria-hidden="true">▤</span><h3>Your directory is empty</h3><p>Add a student record to get started. It will appear here once saved.</p><a class="button" href="{% url 'student_add' %}">＋ Add first student</a></div>
     {% endif %}
-</body>
-</html>
+</section>
+{% endblock %}
