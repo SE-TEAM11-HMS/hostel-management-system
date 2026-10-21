@@ -325,3 +325,65 @@ class StudentViewTest(TestCase):
         response = self.client.get(self.list_url, {"q": "zzznomatch"})
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "No matching students found")
+
+    def test_search_by_usn_partial(self):
+        Student.objects.create(
+            usn="1AB23CS074", name="Eve Taylor",
+            email="eve@example.com", phone="9876543274",
+            department="Computer Science", academic_year=2,
+        )
+        Student.objects.create(
+            usn="1AB23EC099", name="Unrelated USN",
+            email="unrelated.usn@example.com", phone="9876543299",
+            department="Civil Engineering", academic_year=1,
+        )
+        self.client.force_login(self.admin)
+        response = self.client.get(self.list_url, {"q": "cs074"})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Eve Taylor")
+        self.assertNotContains(response, "Unrelated USN")
+
+    def test_search_by_email_partial(self):
+        Student.objects.create(
+            usn="1AB23CS075", name="Frank Green",
+            email="frank.green@example.com", phone="9876543275",
+            department="Computer Science", academic_year=1,
+        )
+        Student.objects.create(
+            usn="1AB23EC098", name="Unrelated Email",
+            email="other@example.com", phone="9876543298",
+            department="Civil Engineering", academic_year=1,
+        )
+        self.client.force_login(self.admin)
+        response = self.client.get(self.list_url, {"q": "FRANK.GREEN"})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Frank Green")
+        self.assertNotContains(response, "Unrelated Email")
+
+    def test_search_by_phone_partial(self):
+        Student.objects.create(
+            usn="1AB23CS076", name="Grace Hall",
+            email="grace@example.com", phone="9876543276",
+            department="Computer Science", academic_year=3,
+        )
+        Student.objects.create(
+            usn="1AB23EC097", name="Unrelated Phone",
+            email="other.phone@example.com", phone="1234567890",
+            department="Civil Engineering", academic_year=1,
+        )
+        self.client.force_login(self.admin)
+        response = self.client.get(self.list_url, {"q": "543276"})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Grace Hall")
+        self.assertNotContains(response, "Unrelated Phone")
+
+    def test_search_is_case_insensitive(self):
+        Student.objects.create(
+            usn="1AB23CS077", name="Henry King",
+            email="henry@example.com", phone="9876543277",
+            department="Computer Science", academic_year=2,
+        )
+        self.client.force_login(self.admin)
+        response = self.client.get(self.list_url, {"q": "henry"})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Henry King")
