@@ -371,3 +371,24 @@ button:disabled { cursor: not-allowed; opacity: .65; }
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
 }
+
+
+/* Small shared accessibility and text-link helpers */
+.visually-hidden {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+}
+.text-link {
+    color: var(--blue-700);
+    font-size: 12px;
+    font-weight: 800;
+    text-decoration: none;
+}
+.text-link:hover { color: var(--navy-800); text-decoration: underline; }
