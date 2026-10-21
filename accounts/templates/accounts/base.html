@@ -1,0 +1,92 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#10213f">
+    <title>{% block title %}Hostel Management System{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'accounts/site.css' %}">
+</head>
+<body class="app-body">
+<div class="app-shell">
+    <aside class="sidebar">
+        <a class="brand" href="{% url 'accounts:dashboard' %}" aria-label="Hostel Management System home">
+            <span class="brand-mark" aria-hidden="true">H</span>
+            <span class="brand-copy">
+                <strong>Hostel<span>HQ</span></strong>
+                <small>MANAGEMENT SUITE</small>
+            </span>
+        </a>
+
+        <div class="sidebar-divider"></div>
+        <p class="nav-caption">WORKSPACE</p>
+        <nav class="sidebar-nav" aria-label="Main navigation">
+            <a class="nav-item{% if request.resolver_match.url_name == 'dashboard' %} active{% endif %}" href="{% url 'accounts:dashboard' %}">
+                <span class="nav-icon" aria-hidden="true">⌂</span>
+                <span>Overview</span>
+            </a>
+            <a class="nav-item{% if request.resolver_match.url_name == 'student_list' or request.resolver_match.url_name == 'student_detail' or request.resolver_match.url_name == 'student_update' or request.resolver_match.url_name == 'student_confirm_delete' or request.resolver_match.url_name == 'student_delete' %} active{% endif %}" href="{% url 'student_list' %}">
+                <span class="nav-icon" aria-hidden="true">▤</span>
+                <span>Student records</span>
+            </a>
+            <a class="nav-item{% if request.resolver_match.url_name == 'student_add' %} active{% endif %}" href="{% url 'student_add' %}">
+                <span class="nav-icon" aria-hidden="true">＋</span>
+                <span>Add a student</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-spacer"></div>
+        <div class="sidebar-status">
+            <span class="status-dot" aria-hidden="true"></span>
+            <span><strong>Workspace active</strong><small>Local development environment</small></span>
+        </div>
+        <div class="sidebar-profile">
+            <span class="profile-avatar">{{ request.user.username|first|upper }}</span>
+            <span class="profile-copy"><strong>{{ request.user.username }}</strong><small>Administrator</small></span>
+        </div>
+        <form method="post" action="{% url 'accounts:logout' %}" class="sidebar-logout">
+            {% csrf_token %}
+            <button type="submit" class="logout-button"><span aria-hidden="true">↪</span> Sign out</button>
+        </form>
+        <p class="sidebar-footnote">Hostel Management System<br>Team 11 · Sprint 1</p>
+    </aside>
+
+    <div class="app-main">
+        <header class="topbar">
+            <div class="topbar-heading">
+                <p class="eyebrow">HOSTEL OPERATIONS <span>/</span> {% block section_label %}OVERVIEW{% endblock %}</p>
+                <h1>{% block page_title %}Overview{% endblock %}</h1>
+                {% block page_subtitle %}<p class="topbar-subtitle">Your administrative workspace.</p>{% endblock %}
+            </div>
+            <div class="topbar-right">
+                <div class="system-pill"><span class="status-dot" aria-hidden="true"></span> System available</div>
+                <span class="topbar-avatar" aria-hidden="true">{{ request.user.username|first|upper }}</span>
+            </div>
+            {% block header_actions %}{% endblock %}
+        </header>
+
+        <div class="page-container">
+            {% if messages %}
+                <div class="message-stack" aria-live="polite">
+                    {% for message in messages %}
+                        <div class="message {{ message.tags }}" role="{% if message.tags == 'error' %}alert{% else %}status{% endif %}">
+                            <span class="message-mark" aria-hidden="true">{% if message.tags == 'success' %}✓{% elif message.tags == 'error' %}!{% else %}i{% endif %}</span>
+                            <span>{{ message }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <main id="main-content" class="page-content">
+                {% block content %}{% endblock %}
+            </main>
+            <footer class="app-footer">
+                <span>HostelHQ <span class="footer-dot">·</span> Hostel Management System</span>
+                <span>Secure student administration</span>
+            </footer>
+        </div>
+    </div>
+</div>
+</body>
+</html>
