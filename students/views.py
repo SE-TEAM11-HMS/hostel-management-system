@@ -34,6 +34,9 @@ def add_student(request):
 
 @login_required
 def student_list(request):
+    if not request.user.is_staff:
+        return HttpResponseForbidden("You do not have permission to view students.")
+
     students = Student.objects.all().order_by("name")
 
     return render(
