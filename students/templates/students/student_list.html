@@ -9,26 +9,32 @@
     <h1>Students</h1>
 
     {% if messages %}
-        {% for message in messages %}
-            <p>{{ message }}</p>
-        {% endfor %}
+        {% for message in messages %}<p>{{ message }}</p>{% endfor %}
     {% endif %}
 
-    <p>
-        <a href="{% url 'student_add' %}">Add Student</a>
-    </p>
+    <form method="get" action="{% url 'student_list' %}">
+        <label for="student-search">Search students:</label>
+        <input
+            type="search"
+            id="student-search"
+            name="q"
+            value="{{ query }}"
+            placeholder="Search by USN, name, email, phone, or department"
+        >
+        <button type="submit">Search</button>
+        {% if query %}
+            <a href="{% url 'student_list' %}">Clear search</a>
+        {% endif %}
+    </form>
+
+    <p><a href="{% url 'student_add' %}">Add Student</a></p>
 
     {% if students %}
         <table border="1" cellpadding="8">
             <thead>
                 <tr>
-                    <th>USN</th>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Phone</th>
-                    <th>Department</th>
-                    <th>Academic Year</th>
-                    <th>Actions</th>
+                    <th>USN</th><th>Name</th><th>Email</th>
+                    <th>Phone</th><th>Department</th><th>Academic Year</th><th>Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -49,6 +55,8 @@
                 {% endfor %}
             </tbody>
         </table>
+    {% elif query %}
+        <p>No matching students found for "{{ query }}".</p>
     {% else %}
         <p>No students found.</p>
     {% endif %}
