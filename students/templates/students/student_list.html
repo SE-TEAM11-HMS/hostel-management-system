@@ -1,64 +1,83 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Students</title>
-</head>
-<body>
-    <h1>Students</h1>
+{% extends "accounts/base.html" %}
 
-    {% if messages %}
-        {% for message in messages %}<p>{{ message }}</p>{% endfor %}
-    {% endif %}
+{% block title %}Student records | HostelHQ{% endblock %}
+{% block section_label %}STUDENT MANAGEMENT{% endblock %}
+{% block page_title %}Student records{% endblock %}
+{% block page_subtitle %}<p class="topbar-subtitle">Find, review, and maintain student information.</p>{% endblock %}
+{% block header_actions %}<a class="button" href="{% url 'student_add' %}"><span aria-hidden="true">＋</span> Add student</a>{% endblock %}
 
-    <form method="get" action="{% url 'student_list' %}">
-        <label for="student-search">Search students:</label>
-        <input
-            type="search"
-            id="student-search"
-            name="q"
-            value="{{ query }}"
-            placeholder="Search by USN, name, email, phone, or department"
-        >
-        <button type="submit">Search</button>
-        {% if query %}
-            <a href="{% url 'student_list' %}">Clear search</a>
-        {% endif %}
+{% block content %}
+<div class="page-intro">
+    <div>
+        <h2>Student directory</h2>
+        <p>Search across student identifiers and contact details, then open a record to view, edit, or delete it.</p>
+    </div>
+</div>
+
+<section class="panel directory-panel" aria-label="Student directory">
+    <form class="search-bar" method="get" action="{% url 'student_list' %}">
+        <div class="search-field">
+            <span class="search-icon" aria-hidden="true">⌕</span>
+            <label class="visually-hidden" for="student-search">Search student records</label>
+            <input type="search" id="student-search" name="q" value="{{ query }}" placeholder="Search by USN, name, email, phone, or department">
+        </div>
+        <button class="button" type="submit">Search records</button>
+        {% if query %}<a class="clear-link" href="{% url 'student_list' %}">Clear search</a>{% endif %}
     </form>
 
-    <p><a href="{% url 'student_add' %}">Add Student</a></p>
-
     {% if students %}
-        <table border="1" cellpadding="8">
-            <thead>
-                <tr>
-                    <th>USN</th><th>Name</th><th>Email</th>
-                    <th>Phone</th><th>Department</th><th>Academic Year</th><th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for student in students %}
+        <div class="table-wrap">
+            <table class="student-table">
+                <thead>
                     <tr>
-                        <td>{{ student.usn }}</td>
-                        <td>{{ student.name }}</td>
-                        <td>{{ student.email }}</td>
-                        <td>{{ student.phone }}</td>
-                        <td>{{ student.department }}</td>
-                        <td>{{ student.academic_year }}</td>
-                        <td>
-                            <a href="{% url 'student_detail' student.pk %}">View</a>
-                            <a href="{% url 'student_update' student.pk %}">Edit</a>
-                            <a href="{% url 'student_confirm_delete' student.pk %}">Delete</a>
-                        </td>
+                        <th>USN</th>
+                        <th>Student name</th>
+                        <th>Email address</th>
+                        <th>Phone</th>
+                        <th>Department</th>
+                        <th>Year</th>
+                        <th>Actions</th>
                     </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    {% for student in students %}
+                        <tr>
+                            <td><span class="student-id">{{ student.usn }}</span></td>
+                            <td class="student-name">{{ student.name }}</td>
+                            <td>{{ student.email }}</td>
+                            <td>{{ student.phone }}</td>
+                            <td>{{ student.department }}</td>
+                            <td><span class="year-badge">Year {{ student.academic_year }}</span></td>
+                            <td>
+                                <div class="table-actions">
+                                    <a class="table-action" href="{% url 'student_detail' student.pk %}">View</a>
+                                    <a class="table-action" href="{% url 'student_update' student.pk %}">Edit</a>
+                                    <a class="table-action danger" href="{% url 'student_confirm_delete' student.pk %}">Delete</a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="table-footer">
+            <span>{% if query %}Search results for <strong>“{{ query }}”</strong>{% else %}All student records{% endif %}</span>
+            <span>Results displayed: <strong>{{ students|length }}</strong></span>
+        </div>
     {% elif query %}
-        <p>No matching students found for "{{ query }}".</p>
+        <div class="empty-state">
+            <div class="empty-icon" aria-hidden="true">⌕</div>
+            <h3>No matching students found</h3>
+            <p>Try another USN, name, email, phone number, or department.</p>
+            <a class="button button-secondary" href="{% url 'student_list' %}">Clear search</a>
+        </div>
     {% else %}
-        <p>No students found.</p>
+        <div class="empty-state">
+            <div class="empty-icon" aria-hidden="true">▤</div>
+            <h3>No student records yet</h3>
+            <p>Add a student to start building the directory.</p>
+            <a class="button" href="{% url 'student_add' %}">Add first student</a>
+        </div>
     {% endif %}
-</body>
-</html>
+</section>
+{% endblock %}
