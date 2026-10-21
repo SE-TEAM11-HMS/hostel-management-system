@@ -215,3 +215,8 @@ class StudentViewTest(TestCase):
         self.client.force_login(self.admin)
         response = self.client.get(self.list_url)
         self.assertEqual(response.status_code, 200)
+
+    def test_non_admin_is_forbidden_from_student_list(self):
+        self.client.force_login(self.regular_user)
+        response = self.client.get(self.list_url)
+        self.assertEqual(response.status_code, 403)
