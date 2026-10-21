@@ -220,3 +220,21 @@ class StudentViewTest(TestCase):
         self.client.force_login(self.regular_user)
         response = self.client.get(self.list_url)
         self.assertEqual(response.status_code, 403)
+
+    def test_non_admin_is_forbidden_from_student_detail(self):
+        student = Student.objects.create(
+            usn="1AB23CS050",
+            name="Detail Student",
+            email="detail@example.com",
+            phone="9876543250",
+            department="Computer Science",
+            academic_year=1,
+        )
+        self.client.force_login(self.regular_user)
+        response = self.client.get(reverse("student_detail", args=[student.pk]))
+        self.assertEqual(response.status_code, 403)
+
+    def test_nonexistent_student_returns_404(self):
+        self.client.force_login(self.admin)
+        response = self.client.get(reverse("student_detail", args=[99999]))
+        self.assertEqual(response.status_code, 404)
