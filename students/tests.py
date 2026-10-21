@@ -129,7 +129,7 @@ class StudentViewTest(TestCase):
             self.url, self.valid_student_data()
         )
 
-        self.assertRedirects(response, self.list_url)
+        self.assertRedirects(response, self.list_url, fetch_redirect_response=False)
 
         list_response = self.client.get(self.list_url)
         self.assertContains(
