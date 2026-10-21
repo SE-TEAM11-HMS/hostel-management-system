@@ -60,3 +60,29 @@ def student_detail(request, pk):
         "students/student_detail.html",
         {"student": student},
     )
+
+
+@login_required
+def student_update(request, pk):
+    if not request.user.is_staff:
+        return HttpResponseForbidden(
+            "You do not have permission to update students."
+        )
+
+    student = get_object_or_404(Student, pk=pk)
+
+    if request.method == "POST":
+        form = StudentForm(request.POST, instance=student)
+
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Student updated successfully.")
+            return redirect("student_detail", pk=student.pk)
+    else:
+        form = StudentForm(instance=student)
+
+    return render(
+        request,
+        "students/student_update.html",
+        {"form": form, "student": student},
+    )
