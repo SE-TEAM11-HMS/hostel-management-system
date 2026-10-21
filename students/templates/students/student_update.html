@@ -1,25 +1,18 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Update Student Details</title>
-</head>
-<body>
-    <h1>Update Student Details</h1>
-
-    <form method="post">
-        {% csrf_token %}
-
-        {{ form.as_p }}
-
-        <button type="submit">Save Changes</button>
-    </form>
-
-    <p>
-        <a href="{% url 'student_detail' student.pk %}">
-            Cancel
-        </a>
-    </p>
-</body>
-</html>
+{% extends "accounts/base.html" %}
+{% block title %}Edit student | HostelHQ{% endblock %}
+{% block section_label %}STUDENT MANAGEMENT{% endblock %}
+{% block page_title %}Edit student record{% endblock %}
+{% block page_subtitle %}<p class="topbar-subtitle">Update the student's academic and contact details.</p>{% endblock %}
+{% block content %}
+<div class="page-intro"><div><h2>Student information</h2><p>Changes are validated before the record is saved.</p></div><a class="button button-secondary" href="{% url 'student_detail' student.pk %}">← Back to profile</a></div>
+<div class="form-layout">
+<section class="panel form-panel"><div class="form-intro"><h2>Edit {{ student.name }}</h2><p>Make the necessary changes, then save the record.</p></div>
+{% if form.non_field_errors %}<div class="form-errors" role="alert">{% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+<form method="post" class="styled-form">{% csrf_token %}<div class="form-grid">{% for field in form %}
+<div class="form-field{% if field.errors %} has-error{% endif %}">{{ field.label_tag }}{{ field }}{% if field.help_text %}<small class="form-help">{{ field.help_text }}</small>{% endif %}{% if field.errors %}<ul class="error-list" role="alert">{% for error in field.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}</div>
+{% endfor %}</div>
+<div class="form-actions"><button type="submit" class="button">Save changes <span aria-hidden="true">→</span></button><a class="button button-secondary" href="{% url 'student_detail' student.pk %}">Cancel</a></div>
+</form></section>
+<aside class="helper-card"><span class="helper-icon" aria-hidden="true">✓</span><h3>Validation reminders</h3><p>Keep student information accurate and unique.</p><ul><li>USN must be unique.</li><li>Email must not duplicate another record.</li><li>Phone number must contain 10 digits.</li><li>Academic year must be from 1 to 4.</li></ul></aside>
+</div>
+{% endblock %}
