@@ -1,83 +1,30 @@
 {% extends "accounts/base.html" %}
-
 {% block title %}Student records | HostelHQ{% endblock %}
 {% block section_label %}STUDENT MANAGEMENT{% endblock %}
 {% block page_title %}Student records{% endblock %}
-{% block page_subtitle %}<p class="topbar-subtitle">Find, review, and maintain student information.</p>{% endblock %}
-{% block header_actions %}<a class="button" href="{% url 'student_add' %}"><span aria-hidden="true">＋</span> Add student</a>{% endblock %}
-
+{% block page_subtitle %}<p class="topbar-subtitle">Search, review, and maintain student information from one place.</p>{% endblock %}
+{% block header_actions %}<a class="button" href="{% url 'student_add' %}">＋ Add student</a>{% endblock %}
 {% block content %}
-<div class="page-intro">
-    <div>
-        <h2>Student directory</h2>
-        <p>Search across student identifiers and contact details, then open a record to view, edit, or delete it.</p>
-    </div>
-</div>
-
-<section class="panel directory-panel" aria-label="Student directory">
-    <form class="search-bar" method="get" action="{% url 'student_list' %}">
-        <div class="search-field">
-            <span class="search-icon" aria-hidden="true">⌕</span>
-            <label class="visually-hidden" for="student-search">Search student records</label>
-            <input type="search" id="student-search" name="q" value="{{ query }}" placeholder="Search by USN, name, email, phone, or department">
-        </div>
-        <button class="button" type="submit">Search records</button>
+<div class="page-intro"><div><h2>Student directory</h2><p>Search by USN, name, email, phone number, or department.</p></div></div>
+<section class="panel directory-panel">
+    <form method="get" action="{% url 'student_list' %}" class="search-bar">
+        <div class="search-field"><span class="search-icon" aria-hidden="true">⌕</span><label for="student-search" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0">Search students</label><input type="search" id="student-search" name="q" value="{{ query }}" placeholder="Search by USN, name, email, phone, or department"></div>
+        <button type="submit" class="button">Search records</button>
         {% if query %}<a class="clear-link" href="{% url 'student_list' %}">Clear search</a>{% endif %}
     </form>
-
     {% if students %}
-        <div class="table-wrap">
-            <table class="student-table">
-                <thead>
-                    <tr>
-                        <th>USN</th>
-                        <th>Student name</th>
-                        <th>Email address</th>
-                        <th>Phone</th>
-                        <th>Department</th>
-                        <th>Year</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for student in students %}
-                        <tr>
-                            <td><span class="student-id">{{ student.usn }}</span></td>
-                            <td class="student-name">{{ student.name }}</td>
-                            <td>{{ student.email }}</td>
-                            <td>{{ student.phone }}</td>
-                            <td>{{ student.department }}</td>
-                            <td><span class="year-badge">Year {{ student.academic_year }}</span></td>
-                            <td>
-                                <div class="table-actions">
-                                    <a class="table-action" href="{% url 'student_detail' student.pk %}">View</a>
-                                    <a class="table-action" href="{% url 'student_update' student.pk %}">Edit</a>
-                                    <a class="table-action danger" href="{% url 'student_confirm_delete' student.pk %}">Delete</a>
-                                </div>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        <div class="table-footer">
-            <span>{% if query %}Search results for <strong>“{{ query }}”</strong>{% else %}All student records{% endif %}</span>
-            <span>Results displayed: <strong>{{ students|length }}</strong></span>
-        </div>
+        <div class="table-wrap"><table class="student-table">
+            <thead><tr><th>USN</th><th>Student</th><th>Email</th><th>Phone</th><th>Department</th><th>Year</th><th>Actions</th></tr></thead>
+            <tbody>{% for student in students %}<tr>
+                <td><span class="student-id">{{ student.usn }}</span></td><td><span class="student-name">{{ student.name }}</span></td><td>{{ student.email }}</td><td>{{ student.phone }}</td><td>{{ student.department }}</td><td><span class="year-badge">Year {{ student.academic_year }}</span></td>
+                <td><div class="table-actions"><a class="table-action" href="{% url 'student_detail' student.pk %}">View</a><a class="table-action" href="{% url 'student_update' student.pk %}">Edit</a><a class="table-action danger" href="{% url 'student_confirm_delete' student.pk %}">Delete</a></div></td>
+            </tr>{% endfor %}</tbody>
+        </table></div>
+        <div class="table-footer"><span>{% if query %}Results for “{{ query }}”{% else %}Student directory{% endif %}</span><span>{{ students|length }} record{{ students|length|pluralize }} shown</span></div>
     {% elif query %}
-        <div class="empty-state">
-            <div class="empty-icon" aria-hidden="true">⌕</div>
-            <h3>No matching students found</h3>
-            <p>Try another USN, name, email, phone number, or department.</p>
-            <a class="button button-secondary" href="{% url 'student_list' %}">Clear search</a>
-        </div>
+        <div class="empty-state"><span class="empty-icon" aria-hidden="true">⌕</span><h3>No matching students found</h3><p>Try another name, USN, email address, phone number, or department.</p><a class="button button-secondary" href="{% url 'student_list' %}">Clear search</a></div>
     {% else %}
-        <div class="empty-state">
-            <div class="empty-icon" aria-hidden="true">▤</div>
-            <h3>No student records yet</h3>
-            <p>Add a student to start building the directory.</p>
-            <a class="button" href="{% url 'student_add' %}">Add first student</a>
-        </div>
+        <div class="empty-state"><span class="empty-icon" aria-hidden="true">▤</span><h3>Your directory is empty</h3><p>Add a student record to get started. It will appear here once saved.</p><a class="button" href="{% url 'student_add' %}">＋ Add first student</a></div>
     {% endif %}
 </section>
 {% endblock %}
