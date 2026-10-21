@@ -7,6 +7,7 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_POST
 
 from .forms import AdminLoginForm
+from students.models import Student
 
 
 @never_cache
@@ -58,9 +59,17 @@ def dashboard(request):
             "You do not have permission to access this page."
         )
 
+    students = Student.objects.all().order_by("-pk")
+    context = {
+        "total_students": Student.objects.count(),
+        "department_count": Student.objects.values("department").distinct().count(),
+        "academic_year_count": Student.objects.values("academic_year").distinct().count(),
+        "recent_students": students[:5],
+    }
     return render(
         request,
         "accounts/dashboard.html",
+        context,
     )
 
 

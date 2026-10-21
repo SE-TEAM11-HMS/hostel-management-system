@@ -1,28 +1,19 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Details</title>
-</head>
-<body>
-    <h1>Student Details</h1>
-
-    {% if messages %}
-        {% for message in messages %}<p>{{ message }}</p>{% endfor %}
-    {% endif %}
-
-    <p><strong>USN:</strong> {{ student.usn }}</p>
-    <p><strong>Name:</strong> {{ student.name }}</p>
-    <p><strong>Email:</strong> {{ student.email }}</p>
-    <p><strong>Phone:</strong> {{ student.phone }}</p>
-    <p><strong>Department:</strong> {{ student.department }}</p>
-    <p><strong>Academic Year:</strong> {{ student.academic_year }}</p>
-
-    <p>
-        <a href="{% url 'student_update' student.pk %}">Edit Student</a>
-        <a href="{% url 'student_confirm_delete' student.pk %}">Delete Student</a>
-    </p>
-    <p><a href="{% url 'student_list' %}">Back to Student List</a></p>
-</body>
-</html>
+{% extends "accounts/base.html" %}
+{% block title %}{{ student.name }} | Student profile{% endblock %}
+{% block section_label %}STUDENT MANAGEMENT{% endblock %}
+{% block page_title %}Student profile{% endblock %}
+{% block page_subtitle %}<p class="topbar-subtitle">Review the saved academic and contact information for this student.</p>{% endblock %}
+{% block header_actions %}<a class="button button-secondary" href="{% url 'student_list' %}">← Back to directory</a>{% endblock %}
+{% block content %}
+<section class="detail-hero"><span class="detail-avatar" aria-hidden="true">{{ student.name|first|upper }}</span><div><h2>{{ student.name }}</h2><p>{{ student.usn }} <span aria-hidden="true">·</span> {{ student.department }} <span aria-hidden="true">·</span> Year {{ student.academic_year }}</p></div><div class="detail-actions"><a class="button button-secondary" href="{% url 'student_update' student.pk %}">Edit record</a><a class="button button-danger" href="{% url 'student_confirm_delete' student.pk %}">Delete</a></div></section>
+<section class="panel"><div class="panel-heading"><div><h2>Profile information</h2><p>Student record details</p></div><span class="year-badge">Year {{ student.academic_year }}</span></div>
+<div class="detail-grid">
+<div class="detail-item"><span class="detail-label">University student number</span><span class="detail-value">{{ student.usn }}</span></div>
+<div class="detail-item"><span class="detail-label">Full name</span><span class="detail-value">{{ student.name }}</span></div>
+<div class="detail-item"><span class="detail-label">Email address</span><span class="detail-value">{{ student.email }}</span></div>
+<div class="detail-item"><span class="detail-label">Phone number</span><span class="detail-value">{{ student.phone }}</span></div>
+<div class="detail-item"><span class="detail-label">Department</span><span class="detail-value">{{ student.department }}</span></div>
+<div class="detail-item"><span class="detail-label">Academic year</span><span class="detail-value">Year {{ student.academic_year }}</span></div>
+</div></section>
+<a class="detail-back" href="{% url 'student_list' %}">← Return to student directory</a>
+{% endblock %}
