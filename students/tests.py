@@ -237,6 +237,32 @@ class StudentViewTest(TestCase):
         response = self.client.get(reverse("student_detail", args=[99999]))
         self.assertEqual(response.status_code, 404)
 
+    def test_update_success_message_is_displayed(self):
+        student = Student.objects.create(
+            usn="1AB23CS020",
+            name="Msg Student",
+            email="msg.student@example.com",
+            phone="9876543220",
+            department="Computer Science",
+            academic_year=2,
+        )
+        self.client.force_login(self.admin)
+        detail_url = reverse("student_detail", args=[student.pk])
+        response = self.client.post(
+            reverse("student_update", args=[student.pk]),
+            {
+                "usn": "1AB23CS020",
+                "name": "Msg Student",
+                "email": "msg.student@example.com",
+                "phone": "9876543220",
+                "department": "Computer Science",
+                "academic_year": 2,
+            },
+        )
+        self.assertRedirects(response, detail_url, fetch_redirect_response=False)
+        detail_response = self.client.get(detail_url)
+        self.assertContains(detail_response, "Student updated successfully.")
+
     def test_admin_can_update_student(self):
         student = Student.objects.create(
             usn="1AB23CS010",

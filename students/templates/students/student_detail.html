@@ -8,6 +8,12 @@
 <body>
     <h1>Student Details</h1>
 
+    {% if messages %}
+        {% for message in messages %}
+            <p>{{ message }}</p>
+        {% endfor %}
+    {% endif %}
+
     <p><strong>USN:</strong> {{ student.usn }}</p>
     <p><strong>Name:</strong> {{ student.name }}</p>
     <p><strong>Email:</strong> {{ student.email }}</p>
