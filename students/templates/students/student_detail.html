@@ -1,28 +1,21 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Details</title>
-</head>
-<body>
-    <h1>Student Details</h1>
-
-    {% if messages %}
-        {% for message in messages %}<p>{{ message }}</p>{% endfor %}
-    {% endif %}
-
-    <p><strong>USN:</strong> {{ student.usn }}</p>
-    <p><strong>Name:</strong> {{ student.name }}</p>
-    <p><strong>Email:</strong> {{ student.email }}</p>
-    <p><strong>Phone:</strong> {{ student.phone }}</p>
-    <p><strong>Department:</strong> {{ student.department }}</p>
-    <p><strong>Academic Year:</strong> {{ student.academic_year }}</p>
-
-    <p>
-        <a href="{% url 'student_update' student.pk %}">Edit Student</a>
-        <a href="{% url 'student_confirm_delete' student.pk %}">Delete Student</a>
-    </p>
-    <p><a href="{% url 'student_list' %}">Back to Student List</a></p>
-</body>
-</html>
+{% extends "base.html" %}
+{% block title %}{{ student.name }} | Student Details{% endblock %}
+{% block students_active %}is-active{% endblock %}
+{% block content %}
+<header class="page-header">
+  <div class="page-heading"><p class="eyebrow">STUDENTS / RECORD DETAILS</p><h1>Student details</h1><p class="page-description">Review the information saved for this student.</p></div>
+  <a class="button button-secondary" href="{% url 'student_list' %}">Back to directory</a>
+</header>
+<section class="card">
+  <div class="card-header"><div><span class="detail-badge">Student record</span><h2 style="margin:13px 0 4px">{{ student.name }}</h2><p class="card-subtitle">USN: {{ student.usn }}</p></div></div>
+  <dl class="detail-grid">
+    <div class="detail-item"><dt>University seat number</dt><dd>{{ student.usn }}</dd></div>
+    <div class="detail-item"><dt>Full name</dt><dd>{{ student.name }}</dd></div>
+    <div class="detail-item"><dt>Email address</dt><dd>{{ student.email }}</dd></div>
+    <div class="detail-item"><dt>Phone number</dt><dd>{{ student.phone }}</dd></div>
+    <div class="detail-item"><dt>Department</dt><dd>{{ student.department }}</dd></div>
+    <div class="detail-item"><dt>Academic year</dt><dd>Year {{ student.academic_year }}</dd></div>
+  </dl>
+  <div class="detail-actions"><a class="button button-primary" href="{% url 'student_update' student.pk %}">Edit student</a><a class="button button-secondary" href="{% url 'student_confirm_delete' student.pk %}">Delete student</a></div>
+</section>
+{% endblock %}

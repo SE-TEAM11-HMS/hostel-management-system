@@ -1,25 +1,17 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Update Student Details</title>
-</head>
-<body>
-    <h1>Update Student Details</h1>
-
-    <form method="post">
-        {% csrf_token %}
-
-        {{ form.as_p }}
-
-        <button type="submit">Save Changes</button>
-    </form>
-
-    <p>
-        <a href="{% url 'student_detail' student.pk %}">
-            Cancel
-        </a>
-    </p>
-</body>
-</html>
+{% extends "base.html" %}
+{% block title %}Edit {{ student.name }} | Hostel Management System{% endblock %}
+{% block students_active %}is-active{% endblock %}
+{% block content %}
+<header class="page-header">
+  <div class="page-heading"><p class="eyebrow">STUDENTS / EDIT RECORD</p><h1>Edit student details</h1><p class="page-description">Update the saved details for {{ student.name }} ({{ student.usn }}).</p></div>
+  <a class="button button-secondary" href="{% url 'student_detail' student.pk %}">Back to details</a>
+</header>
+<section class="card form-card">
+  <div class="card-header"><div><h2>Student information</h2><p class="card-subtitle">Changes are saved only when the form is valid.</p></div></div>
+  <form method="post" novalidate>
+    {% csrf_token %}
+    <div class="form-grid">{% include "partials/form_fields.html" %}</div>
+    <div class="form-actions"><button class="button button-primary" type="submit">Save changes</button><a class="button button-secondary" href="{% url 'student_detail' student.pk %}">Cancel</a></div>
+  </form>
+</section>
+{% endblock %}

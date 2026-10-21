@@ -1,19 +1,17 @@
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add Student</title>
-</head>
-<body>
-    <h1>Add Student</h1>
-
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-
-        <button type="submit">Save Student</button>
-    </form>
-</body>
-</html>
+{% extends "base.html" %}
+{% block title %}Add Student | Hostel Management System{% endblock %}
+{% block students_active %}is-active{% endblock %}
+{% block content %}
+<header class="page-header">
+  <div class="page-heading"><p class="eyebrow">STUDENTS / NEW RECORD</p><h1>Add a student</h1><p class="page-description">Enter the academic and contact information below.</p></div>
+  <a class="button button-secondary" href="{% url 'student_list' %}">Back to directory</a>
+</header>
+<section class="card form-card">
+  <div class="card-header"><div><h2>Student information</h2><p class="card-subtitle">Review the details before saving.</p></div></div>
+  <form method="post" novalidate>
+    {% csrf_token %}
+    <div class="form-grid">{% include "partials/form_fields.html" %}</div>
+    <div class="form-actions"><button class="button button-primary" type="submit">Save student</button><a class="button button-secondary" href="{% url 'student_list' %}">Cancel</a></div>
+  </form>
+</section>
+{% endblock %}

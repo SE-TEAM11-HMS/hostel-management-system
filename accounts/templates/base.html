@@ -1,0 +1,52 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#153b35">
+    <title>{% block title %}Hostel Management System{% endblock %}</title>
+    <link rel="stylesheet" href="/static/css/app.css">
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="{% block body_class %}app-body{% endblock %}">
+<div class="app-shell {% if request.user.is_authenticated and request.user.is_staff %}has-sidebar{% else %}no-sidebar{% endif %}">
+    <header class="topbar">
+        <a class="brand" href="{% if request.user.is_authenticated and request.user.is_staff %}{% url 'accounts:dashboard' %}{% else %}{% url 'accounts:login' %}{% endif %}" aria-label="Hostel Management System home">
+            <span class="brand-mark" aria-hidden="true">H</span>
+            <span class="brand-copy"><span class="brand-name">Hostel Management</span><span class="brand-caption">ADMINISTRATION PORTAL</span></span>
+        </a>
+        {% if request.user.is_authenticated and request.user.is_staff %}
+            <div class="topbar-user"><span class="status-dot" aria-hidden="true"></span><span>Administrator</span><span class="topbar-divider" aria-hidden="true"></span><span class="topbar-username">{{ request.user.username }}</span></div>
+        {% endif %}
+    </header>
+    {% if request.user.is_authenticated and request.user.is_staff %}
+        <aside class="sidebar">
+            <div class="sidebar-label">WORKSPACE</div>
+            <nav class="sidebar-nav" aria-label="Main navigation">
+                <a class="nav-link {% block dashboard_active %}{% endblock %}" href="{% url 'accounts:dashboard' %}"><span class="nav-icon" aria-hidden="true">⌂</span><span>Dashboard</span></a>
+                <a class="nav-link {% block students_active %}{% endblock %}" href="{% url 'student_list' %}"><span class="nav-icon" aria-hidden="true">▤</span><span>Students</span></a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-account"><span class="avatar" aria-hidden="true">{{ request.user.username|slice:":1"|upper }}</span><span class="account-copy"><strong>{{ request.user.username }}</strong><small>Administrator</small></span></div>
+                <form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}<button class="signout-button" type="submit"><span aria-hidden="true">↪</span> Sign out</button></form>
+            </div>
+        </aside>
+    {% endif %}
+    <main class="main-content {% if request.user.is_authenticated and request.user.is_staff %}with-sidebar{% endif %}">
+        <div class="content-wrap">
+            {% if messages %}
+                <div class="flash-stack" aria-label="Notifications">
+                    {% for message in messages %}
+                        <div class="flash-message flash-{{ message.tags|default:'info' }}" role="status" aria-live="polite"><span class="flash-indicator" aria-hidden="true"></span><span>{{ message }}</span></div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            {% block content %}{% endblock %}
+        </div>
+        <footer class="app-footer"><span>Hostel Management System</span><span>Secure administration workspace</span></footer>
+    </main>
+</div>
+{% block scripts %}{% endblock %}
+</body>
+</html>

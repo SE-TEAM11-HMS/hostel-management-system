@@ -1,27 +1,19 @@
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Confirm Student Deletion</title>
-</head>
-<body>
-    <h1>Delete Student</h1>
-
-    <p>
-        Are you sure you want to delete
-        <strong>{{ student.name }}</strong>
-        ({{ student.usn }})?
-    </p>
-
-    <p>This action cannot be undone.</p>
-
-    <form method="post" action="{% url 'student_delete' student.pk %}">
-        {% csrf_token %}
-        <button type="submit">Yes, Delete Student</button>
-    </form>
-
-    <a href="{% url 'student_detail' student.pk %}">Cancel</a>
-</body>
-</html>
+{% extends "base.html" %}
+{% block title %}Delete {{ student.name }} | Hostel Management System{% endblock %}
+{% block students_active %}is-active{% endblock %}
+{% block content %}
+<header class="page-header">
+  <div class="page-heading"><p class="eyebrow">STUDENTS / REMOVE RECORD</p><h1>Delete student</h1><p class="page-description">Check the selected record before confirming.</p></div>
+  <a class="button button-secondary" href="{% url 'student_detail' student.pk %}">Cancel and return</a>
+</header>
+<section class="card confirm-card">
+  <span class="detail-badge">Record selected</span>
+  <h2 style="margin-top:16px">Delete {{ student.name }}?</h2>
+  <p class="page-description">You are about to remove the record for <strong>{{ student.name }}</strong> ({{ student.usn }}).</p>
+  <div class="warning-panel"><span class="warning-mark" aria-hidden="true">!</span><div><strong>This action cannot be undone.</strong><p>Continue only after checking that this is the correct student.</p></div></div>
+  <form method="post" action="{% url 'student_delete' student.pk %}">
+    {% csrf_token %}
+    <div class="form-actions"><button class="button button-danger" type="submit">Yes, delete student</button><a class="button button-secondary" href="{% url 'student_detail' student.pk %}">Keep record</a></div>
+  </form>
+</section>
+{% endblock %}
