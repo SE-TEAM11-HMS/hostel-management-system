@@ -165,3 +165,14 @@ class StudentDataProtectionTests(TestCase):
         self.student.refresh_from_db()
 
         self.assertEqual(self.student.email, original_email)
+
+    def test_non_staff_cannot_delete_student(self):
+        response = self.user_client.post(
+            reverse("student_delete", args=[self.student.pk])
+        )
+
+        self.assertEqual(response.status_code, 403)
+
+        self.assertTrue(
+            Student.objects.filter(pk=self.student.pk).exists()
+        )
