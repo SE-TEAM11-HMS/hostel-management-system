@@ -121,7 +121,7 @@ python manage.py runserver
 
 Open the following address in your browser:
 
-[http://127.0.0.1:8000/](http://127.0.0.1:8000/)
+[http://127.0.0.1:8000/login/](http://127.0.0.1:8000/login/)
 
 > Run these commands from the project root directory. The available features depend on the current implementation.
 
