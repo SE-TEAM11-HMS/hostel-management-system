@@ -1,27 +1,13 @@
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Confirm Student Deletion</title>
-</head>
-<body>
-    <h1>Delete Student</h1>
-
-    <p>
-        Are you sure you want to delete
-        <strong>{{ student.name }}</strong>
-        ({{ student.usn }})?
-    </p>
-
-    <p>This action cannot be undone.</p>
-
-    <form method="post" action="{% url 'student_delete' student.pk %}">
-        {% csrf_token %}
-        <button type="submit">Yes, Delete Student</button>
-    </form>
-
-    <a href="{% url 'student_detail' student.pk %}">Cancel</a>
-</body>
-</html>
+{% extends "accounts/base.html" %}
+{% block title %}Confirm deletion | HostelHQ{% endblock %}
+{% block section_label %}STUDENT MANAGEMENT{% endblock %}
+{% block page_title %}Delete student record{% endblock %}
+{% block page_subtitle %}<p class="topbar-subtitle">Review this action carefully before confirming.</p>{% endblock %}
+{% block content %}
+<div class="confirm-wrap"><section class="confirm-card">
+<span class="confirm-icon" aria-hidden="true">!</span><h2>Delete this student?</h2>
+<p>This will permanently remove the selected student record from the database. This action cannot be undone.</p>
+<div class="confirm-student"><strong>{{ student.name }}</strong><span>{{ student.usn }} · {{ student.department }}</span></div>
+<div class="confirm-actions"><form method="post" action="{% url 'student_delete' student.pk %}">{% csrf_token %}<button class="button button-danger" type="submit">Yes, delete record</button></form><a class="button button-secondary" href="{% url 'student_detail' student.pk %}">Cancel, keep record</a></div>
+</section></div>
+{% endblock %}

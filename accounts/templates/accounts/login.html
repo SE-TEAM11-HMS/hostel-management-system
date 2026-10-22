@@ -1,99 +1,63 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+    <meta name="theme-color" content="#10213f">
     <title>Administrator Login | Hostel Management System</title>
-
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            font-size: 16px;
-            max-width: 480px;
-            margin: 60px auto;
-            padding: 20px;
-            line-height: 1.6;
-            background: #f5f7fa;
-        }
-
-        .container {
-            background: white;
-            padding: 28px;
-            border-radius: 10px;
-            border: 1px solid #ddd;
-        }
-
-        h1 {
-            font-size: 25px;
-            text-align: center;
-        }
-
-        label {
-            display: block;
-            margin-top: 16px;
-            font-weight: bold;
-        }
-
-        input {
-            box-sizing: border-box;
-            width: 100%;
-            padding: 12px;
-            margin-top: 6px;
-            font-size: 16px;
-        }
-
-        button {
-            width: 100%;
-            padding: 12px;
-            margin-top: 22px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-
-        .error {
-            color: #b00020;
-        }
-    </style>
+    <link rel="stylesheet" href="{% static 'accounts/site.css' %}">
 </head>
-
-<body>
-    <main class="container">
-        <h1>Hostel Management System</h1>
-
-        <p>Administrator Login</p>
-
-        {% if form.non_field_errors %}
-            <div class="error" role="alert" aria-live="polite">
-                {{ form.non_field_errors }}
-            </div>
-        {% endif %}
-
-        <form method="post">
-            {% csrf_token %}
-
-            <input
-                type="hidden"
-                name="next"
-                value="{{ next }}"
-            >
-
-            {% for field in form %}
-                <div>
-                    {{ field.label_tag }}
-
-                    {{ field }}
-
-                    {% for error in field.errors %}
-                        <p class="error" role="alert">
-                            {{ error }}
-                        </p>
-                    {% endfor %}
+<body class="login-page">
+    <main class="login-shell">
+        <section class="login-brand-panel" aria-label="HostelHQ introduction">
+            <a class="login-brand" href="{% url 'accounts:login' %}">
+                <span class="brand-mark" aria-hidden="true">H</span>
+                <span>
+                    <strong>Hostel<span style="color:#9fd1ff">HQ</span></strong>
+                    <small>HOSTEL MANAGEMENT SYSTEM</small>
+                </span>
+            </a>
+            <div class="login-hero">
+                <p class="login-kicker">TEAM 11 · ADMIN WORKSPACE</p>
+                <h1>Manage student records with clarity.</h1>
+                <p>A focused workspace for secure administrator access and reliable student record management.</p>
+                <div class="login-features">
+                    <div class="login-feature"><span aria-hidden="true">✓</span> Administrator-only access</div>
+                    <div class="login-feature"><span aria-hidden="true">▤</span> Student records in one place</div>
+                    <div class="login-feature"><span aria-hidden="true">⌕</span> Fast student search and updates</div>
                 </div>
-            {% endfor %}
-
-            <button type="submit">Login</button>
-        </form>
+            </div>
+            <p class="login-foot">A cleaner way to manage the essentials.<br>Secure access · Consistent records · Clear workflows</p>
+        </section>
+        <section class="login-form-panel" aria-labelledby="login-heading">
+            <div class="login-card">
+                <p class="login-overline">WELCOME BACK</p>
+                <h2 id="login-heading">Sign in</h2>
+                <p class="login-description">Use your administrator credentials to continue to the workspace.</p>
+                {% if form.non_field_errors %}
+                    <div class="login-error" role="alert" aria-live="polite">{{ form.non_field_errors }}</div>
+                {% endif %}
+                <form method="post" class="login-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ next }}">
+                    {% for field in form %}
+                        <div class="login-field">
+                            {{ field.label_tag }}
+                            {{ field }}
+                            {% for error in field.errors %}
+                                <p class="error" role="alert">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                    <button class="login-submit" type="submit">Sign in to dashboard <span aria-hidden="true">→</span></button>
+                </form>
+                <div class="login-security-note">
+                    <span aria-hidden="true">◈</span>
+                    <span>This area is reserved for authorized administrators. Your session is protected by the application's authentication controls.</span>
+                </div>
+            </div>
+        </section>
     </main>
 </body>
 </html>
