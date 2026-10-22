@@ -73,7 +73,6 @@ class StudentDataProtectionTests(TestCase):
         )
 
         self.student.refresh_from_db()
-
         self.assertEqual(self.student.name, original_name)
 
     def test_student_name_is_escaped_on_detail_page(self):
@@ -85,7 +84,6 @@ class StudentDataProtectionTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-
         self.assertNotContains(
             response,
             "<script>alert('xss')</script>",
@@ -100,10 +98,7 @@ class StudentDataProtectionTests(TestCase):
             reverse("student_delete", args=[self.student.pk])
         )
 
-        # Deletion without a CSRF token must be rejected.
         self.assertEqual(response.status_code, 403)
-
-        # The student must still exist.
         self.assertTrue(
             Student.objects.filter(pk=self.student.pk).exists()
         )
@@ -123,10 +118,7 @@ class StudentDataProtectionTests(TestCase):
             },
         )
 
-        self.assertEqual(
-            Student.objects.count(),
-            initial_count,
-        )
+        self.assertEqual(Student.objects.count(), initial_count)
 
     def test_injection_like_search_does_not_return_all_students(self):
         Student.objects.create(
@@ -162,8 +154,17 @@ class StudentDataProtectionTests(TestCase):
         )
 
         self.student.refresh_from_db()
-
         self.assertEqual(self.student.email, original_email)
+
+    def test_non_staff_cannot_delete_student(self):
+        response = self.user_client.post(
+            reverse("student_delete", args=[self.student.pk])
+        )
+
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue(
+            Student.objects.filter(pk=self.student.pk).exists()
+        )
 
     def test_staff_non_superuser_can_view_student_list(self):
         staff_user = User.objects.create_user(
