@@ -38,8 +38,8 @@ Status legend:
 |---|---|---|---|---|
 | HMS-SEC-001 | User authentication | accounts/tests.py — valid administrator login | P | Automated test passed |
 | HMS-SEC-002 | Reject invalid credentials | accounts/tests.py — invalid password and non-admin login | P | Automated tests passed |
-| HMS-SEC-003 | Restrict administrator operations | accounts/tests.py and students/tests.py — non-admin access tests | P | Verified for implemented Sprint 1 functions |
-| HMS-SEC-004 | Protect data from unauthorized modification or deletion | students/test_security.py — unauthorized modification and CSRF deletion test | P | Student-management scope tested; room-related scope remains for later |
+| HMS-SEC-003 | Restrict administrator operations | accounts/tests.py and students/tests.py; students/test_security.py — staff permission test (PR #13) and non-staff deletion denial test (PR #14) | P | Verified for implemented Sprint 1 functions |
+| HMS-SEC-004 | Protect data from unauthorized modification or deletion | students/test_security.py — unauthorized modification, CSRF deletion, and non-staff deletion denial tests (PRs #10 and #14) | P | Student-management scope tested; room-related scope remains for later |
 | HMS-SEC-005 | Restrict protected access after logout | accounts/tests.py — logout session test and authentication checks | P | Automated tests passed |
 | HMS-SEC-006 | Validate input before storage | students/tests.py and students/test_security.py — validation tests | P | Student input validation tested; room validation remains for later |
 
@@ -47,7 +47,7 @@ Status legend:
 
 | Requirement ID | Requirement | Evidence | Status | Notes |
 |---|---|---|---|---|
-| HMS-NFR-001 | User-friendly interface | Basic manual student-management workflow | A | Formal usability/accessibility evaluation still required |
+| HMS-NFR-001 | User-friendly interface | Manual review of redesigned login, dashboard, and student directory (PR #12) | A | Interface reviewed manually; formal usability/accessibility evaluation still required |
 | HMS-NFR-002 | Response time within 3 seconds | No formal timing results recorded | N | Performance measurement pending |
 | HMS-NFR-003 | Data accuracy and consistency | Student creation, update, and deletion tests | A | Student scope checked; room/allocation consistency remains for later |
 | HMS-NFR-004 | System availability | No formal availability test recorded | N | Verification pending |
@@ -60,16 +60,23 @@ Local configuration check:
 python manage.py check — Passed
 
 Local automated test suite:
-python manage.py test — 59 tests passed
+Latest verified automated test suite — 61 tests passed (GitHub Actions on main)
 
 Continuous Integration:
-GitHub Actions workflow completed successfully on main.
+GitHub Actions workflow completed successfully on main. Latest verified run: https://github.com/SE-TEAM11-HMS/hostel-management-system/actions/runs/39745586188
 
 Unit and integration test files:
 - accounts/tests.py
 - students/tests.py
 - students/test_integration.py
-- students/test_security.py
+- students/test_security.py — 9 security tests passed
+
+Relevant pull requests:
+- PR #9 — unit and integration tests: https://github.com/SE-TEAM11-HMS/hostel-management-system/pull/9
+- PR #10 — student data protection tests: https://github.com/SE-TEAM11-HMS/hostel-management-system/pull/10
+- PR #12 — login, dashboard, and student-management UI redesign: https://github.com/SE-TEAM11-HMS/hostel-management-system/pull/12
+- PR #13 — staff permission security test: https://github.com/SE-TEAM11-HMS/hostel-management-system/pull/13
+- PR #14 — non-staff deletion security test and README corrections: https://github.com/SE-TEAM11-HMS/hostel-management-system/pull/14
 
 CI workflow:
 .github/workflows/ci.yml
