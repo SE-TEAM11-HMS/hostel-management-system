@@ -9,6 +9,30 @@ jobs:
     name: Django Checks and Tests
     runs-on: ubuntu-latest
 
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: rootpassword
+          MYSQL_DATABASE: hostel_db
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -prootpassword"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    env:
+      SECRET_KEY: github-actions-test-secret-key
+      DEBUG: "False"
+      ALLOWED_HOSTS: 127.0.0.1,localhost
+      DB_NAME: hostel_db
+      DB_USER: root
+      DB_PASSWORD: rootpassword
+      DB_HOST: 127.0.0.1
+      DB_PORT: "3306"
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -19,13 +43,21 @@ jobs:
           python-version: "3.14"
           cache: pip
 
-      - name: Install dependencies
+      - name: Install MySQL system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pkg-config default-libmysqlclient-dev build-essential
+
+      - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
       - name: Check Django configuration
         run: python manage.py check
+
+      - name: Apply database migrations
+        run: python manage.py migrate --noinput
 
       - name: Run automated tests
         run: python manage.py test
