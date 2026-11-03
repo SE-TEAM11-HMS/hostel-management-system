@@ -6,7 +6,11 @@ from unittest.mock import patch
 from django.contrib.auth import get_user_model
 from django.contrib import admin
 from django.db import close_old_connections, connection
-from django.test import TestCase, TransactionTestCase, RequestFactory
+from django.test import (
+    TestCase,
+    TransactionTestCase,
+    RequestFactory,
+)
 from django.urls import reverse
 
 from students.models import Student
@@ -72,7 +76,10 @@ class AllocationServiceTests(TestCase):
 
         self.assertEqual(allocation.student, self.student)
         self.assertEqual(allocation.room, self.room)
-        self.assertEqual(allocation.status, Allocation.Status.ACTIVE)
+        self.assertEqual(
+            allocation.status,
+            Allocation.Status.ACTIVE,
+        )
         self.assertIsNone(allocation.vacated_at)
 
         self.room.refresh_from_db()
@@ -345,7 +352,7 @@ class AllocationServiceTests(TestCase):
             1,
         )
 
-    # HOSTEL-32 VACATION TESTS
+    # HOSTEL-32 VACATION SERVICE TESTS
 
     def test_successful_room_vacation(self):
         allocation = AllocationService.allocate_room(
@@ -375,7 +382,6 @@ class AllocationServiceTests(TestCase):
             ).exists()
         )
 
-        # Previous allocation must remain as history.
         self.assertTrue(
             Allocation.objects.filter(
                 pk=allocation.pk
@@ -480,10 +486,18 @@ class AllocationPermissionTests(TestCase):
         )
 
         self.url = reverse("allocations:allocate_room")
+
         self.change_url = reverse(
             "allocations:change_room",
             args=[self.student.id],
         )
+
+        self.vacate_url = reverse(
+            "allocations:vacate_room",
+            args=[self.student.id],
+        )
+
+    # ALLOCATION VIEW TESTS
 
     def test_anonymous_user_cannot_allocate_room(self):
         response = self.client.post(
@@ -595,7 +609,7 @@ class AllocationPermissionTests(TestCase):
 
         self.assertEqual(response.status_code, 405)
 
-    # HOSTEL-30 VIEW PERMISSION TESTS
+    # HOSTEL-30 ROOM CHANGE VIEW TESTS
 
     def test_anonymous_user_cannot_change_room(self):
         response = self.client.post(
@@ -667,6 +681,139 @@ class AllocationPermissionTests(TestCase):
                 status=Allocation.Status.ACTIVE,
             ).exists()
         )
+
+    # HOSTEL-31 ROOM VACATION VIEW TESTS
+
+    def test_anonymous_user_cannot_vacate_room(self):
+        response = self.client.get(self.vacate_url)
+
+        self.assertEqual(response.status_code, 302)
+
+    def test_normal_student_cannot_vacate_room(self):
+        AllocationService.allocate_room(
+            self.student.id,
+            self.room.id,
+        )
+
+        self.client.force_login(self.student_user)
+
+        response = self.client.post(
+            self.vacate_url,
+            {"confirm": "yes"},
+        )
+
+        self.assertEqual(response.status_code, 403)
+
+        self.room.refresh_from_db()
+        self.assertEqual(self.room.occupied_count, 1)
+
+    def test_admin_can_view_vacation_confirmation(self):
+        AllocationService.allocate_room(
+            self.student.id,
+            self.room.id,
+        )
+
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(self.vacate_url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Confirm Vacation")
+        self.assertContains(response, self.student.name)
+
+    def test_admin_can_confirm_room_vacation(self):
+        allocation = AllocationService.allocate_room(
+            self.student.id,
+            self.room.id,
+        )
+
+        self.client.force_login(self.admin_user)
+
+        response = self.client.post(
+            self.vacate_url,
+            {"confirm": "yes"},
+        )
+
+        self.assertRedirects(response, self.url)
+
+        allocation.refresh_from_db()
+        self.room.refresh_from_db()
+
+        self.assertEqual(
+            allocation.status,
+            Allocation.Status.VACATED,
+        )
+        self.assertIsNotNone(allocation.vacated_at)
+        self.assertEqual(self.room.occupied_count, 0)
+
+        # Allocation history must be preserved.
+        self.assertTrue(
+            Allocation.objects.filter(
+                pk=allocation.pk
+            ).exists()
+        )
+
+    def test_room_vacation_requires_confirmation(self):
+        AllocationService.allocate_room(
+            self.student.id,
+            self.room.id,
+        )
+
+        self.client.force_login(self.admin_user)
+
+        response = self.client.post(
+            self.vacate_url,
+            {"confirm": "no"},
+        )
+
+        self.assertEqual(response.status_code, 302)
+
+        self.room.refresh_from_db()
+        self.assertEqual(self.room.occupied_count, 1)
+
+        self.assertTrue(
+            Allocation.objects.filter(
+                student=self.student,
+                status=Allocation.Status.ACTIVE,
+            ).exists()
+        )
+
+    def test_already_vacated_room_cannot_be_vacated_again(self):
+        allocation = AllocationService.allocate_room(
+            self.student.id,
+            self.room.id,
+        )
+
+        AllocationService.vacate_room(self.student.id)
+
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(self.vacate_url)
+
+        self.assertRedirects(response, self.url)
+
+        allocation.refresh_from_db()
+        self.room.refresh_from_db()
+
+        self.assertEqual(
+            allocation.status,
+            Allocation.Status.VACATED,
+        )
+        self.assertEqual(self.room.occupied_count, 0)
+
+        self.assertEqual(
+            Allocation.objects.filter(
+                student=self.student,
+            ).count(),
+            1,
+        )
+
+    def test_vacation_endpoint_rejects_other_methods(self):
+        self.client.force_login(self.admin_user)
+
+        response = self.client.put(self.vacate_url)
+
+        self.assertEqual(response.status_code, 405)
 
 
 class AllocationAdminPermissionTests(TestCase):

@@ -1,3 +1,4 @@
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import F
@@ -27,7 +28,7 @@ from .services import (
 @login_required
 @require_http_methods(["GET", "POST"])
 def allocate_room(request):
-    # Only administrators can access this page.
+    # Only administrators can allocate rooms.
     if not request.user.is_staff:
         return HttpResponseForbidden(
             "Only administrators can allocate rooms."
@@ -63,12 +64,10 @@ def allocate_room(request):
 
         return redirect("allocations:allocate_room")
 
-    # Students who do not already have an active allocation.
     eligible_students = Student.objects.exclude(
         allocations__status=Allocation.Status.ACTIVE
     ).distinct().order_by("name")
 
-    # Rooms that still have available beds.
     available_rooms = Room.objects.filter(
         occupied_count__lt=F("capacity")
     ).select_related("hostel").order_by(
@@ -146,7 +145,6 @@ def change_room(request, student_id):
             ) as error:
                 messages.error(request, str(error))
 
-    # Display rooms with available beds, excluding the current room.
     available_rooms = Room.objects.filter(
         occupied_count__lt=F("capacity")
     ).exclude(
@@ -162,5 +160,72 @@ def change_room(request, student_id):
             "student": student,
             "allocation": active_allocation,
             "rooms": available_rooms,
+        },
+    )
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def vacate_room(request, student_id):
+    # Only administrators can vacate room allocations.
+    if not request.user.is_staff:
+        return HttpResponseForbidden(
+            "Only administrators can vacate room allocations."
+        )
+
+    try:
+        student = Student.objects.get(pk=student_id)
+    except (Student.DoesNotExist, ValueError, TypeError):
+        messages.error(request, "Student does not exist.")
+        return redirect("allocations:allocate_room")
+
+    active_allocation = Allocation.objects.filter(
+        student=student,
+        status=Allocation.Status.ACTIVE,
+    ).select_related("room", "room__hostel").first()
+
+    if active_allocation is None:
+        messages.error(
+            request,
+            "This student has no active room allocation to vacate.",
+        )
+        return redirect("allocations:allocate_room")
+
+    if request.method == "POST":
+        if request.POST.get("confirm") != "yes":
+            messages.warning(
+                request,
+                "Room vacation was not confirmed.",
+            )
+            return redirect(
+                "allocations:vacate_room",
+                student_id=student_id,
+            )
+
+        try:
+            AllocationService.vacate_room(student_id)
+
+            messages.success(
+                request,
+                f"Room allocation for {student.name} was vacated successfully.",
+            )
+            return redirect("allocations:allocate_room")
+
+        except (
+            StudentNotFoundError,
+            ActiveAllocationNotFoundError,
+            RoomNotOccupiedError,
+            AllocationError,
+        ) as error:
+            messages.error(request, str(error))
+            return redirect("allocations:allocate_room")
+
+    # Display the confirmation page for GET requests.
+    return render(
+        request,
+        "allocations/vacate_room.html",
+        {
+            "student": student,
+            "allocation": active_allocation,
         },
     )

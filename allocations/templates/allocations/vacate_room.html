@@ -1,0 +1,67 @@
+
+{% extends "accounts/base.html" %}
+
+{% block title %}Confirm Room Vacation{% endblock %}
+
+{% block section_label %}Room Management{% endblock %}
+
+{% block page_title %}Vacate Student Room{% endblock %}
+
+{% block page_subtitle %}
+Confirm that you want to vacate this student's current room allocation.
+{% endblock %}
+
+{% block content %}
+<div class="content-card">
+
+    <h2>Confirm Vacation</h2>
+
+    {% if messages %}
+        {% for message in messages %}
+            <p>{{ message }}</p>
+        {% endfor %}
+    {% endif %}
+
+    <p><strong>Student Name:</strong> {{ student.name }}</p>
+
+    <p><strong>USN:</strong> {{ student.usn }}</p>
+
+    <p>
+        <strong>Hostel:</strong>
+        {{ allocation.room.hostel.name }}
+    </p>
+
+    <p>
+        <strong>Room Number:</strong>
+        {{ allocation.room.room_number }}
+    </p>
+
+    <p>
+        <strong>Current Status:</strong>
+        {{ allocation.status }}
+    </p>
+
+    <hr>
+
+    <p>
+        Are you sure you want to vacate this student's room?
+        The room's available bed count will increase, and the
+        previous allocation will remain in the history.
+    </p>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <input type="hidden" name="confirm" value="yes">
+
+        <button type="submit">
+            Confirm Vacation
+        </button>
+
+        <a href="{% url 'allocations:allocate_room' %}">
+            Cancel
+        </a>
+    </form>
+
+</div>
+{% endblock %}
