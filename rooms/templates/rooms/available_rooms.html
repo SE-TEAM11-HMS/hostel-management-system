@@ -1,0 +1,90 @@
+
+{% extends "accounts/base.html" %}
+
+{% block title %}Available rooms | HostelHQ{% endblock %}
+{% block section_label %}ROOM AVAILABILITY{% endblock %}
+{% block page_title %}Available rooms{% endblock %}
+
+{% block page_subtitle %}
+<p class="topbar-subtitle">
+    View rooms that have at least one available bed.
+</p>
+{% endblock %}
+
+{% block header_actions %}
+<a class="button" href="{% url 'rooms:room_list' %}">Back to directory</a>
+{% endblock %}
+
+{% block content %}
+<section class="panel">
+    <div class="page-intro">
+        <div>
+            <h2>Available rooms</h2>
+            <p>
+                Rooms with available beds are displayed here.
+                Partially occupied rooms are included.
+            </p>
+        </div>
+    </div>
+
+    <form method="get" class="filter-form">
+        <label for="hostel">Filter by hostel</label>
+        <select name="hostel" id="hostel">
+            <option value="">All hostels</option>
+            {% for hostel in hostels %}
+                <option value="{{ hostel.id }}"
+                    {% if selected_hostel == hostel.id|stringformat:"s" %}
+                        selected
+                    {% endif %}>
+                    {{ hostel.name }} - {{ hostel.block }}
+                </option>
+            {% endfor %}
+        </select>
+        <button class="button" type="submit">Filter</button>
+        <a class="button" href="{% url 'rooms:available_rooms' %}">
+            Clear
+        </a>
+    </form>
+
+    {% if rooms %}
+        <div class="table-wrap">
+            <table class="student-table">
+                <thead>
+                    <tr>
+                        <th>Hostel</th>
+                        <th>Room number</th>
+                        <th>Capacity</th>
+                        <th>Occupied</th>
+                        <th>Available beds</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for room in rooms %}
+                        <tr>
+                            <td>{{ room.hostel.name }}</td>
+                            <td>{{ room.room_number }}</td>
+                            <td>{{ room.capacity }}</td>
+                            <td>{{ room.occupied_count }}</td>
+                            <td>{{ room.available_beds }}</td>
+                            <td>
+                                <a href="{% url 'rooms:room_detail' room.id %}">
+                                    View details
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <h3>No available rooms found</h3>
+            <p>
+                There are currently no rooms with available beds
+                for the selected hostel.
+            </p>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}
