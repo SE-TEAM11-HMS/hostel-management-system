@@ -1,0 +1,80 @@
+
+{% extends "accounts/base.html" %}
+
+{% block title %}Hostels and rooms | HostelHQ{% endblock %}
+{% block section_label %}HOSTEL MANAGEMENT{% endblock %}
+{% block page_title %}Hostels and rooms{% endblock %}
+{% block page_subtitle %}
+<p class="topbar-subtitle">Manage hostel details, room numbers, and room capacities.</p>
+{% endblock %}
+
+{% block header_actions %}
+<a class="button" href="{% url 'rooms:hostel_add' %}">＋ Add hostel</a>
+<a class="button" href="{% url 'rooms:room_add' %}">＋ Add room</a>
+{% endblock %}
+
+{% block content %}
+<div class="page-intro">
+    <div>
+        <h2>Hostel directory</h2>
+        <p>Review registered hostels and their rooms.</p>
+    </div>
+</div>
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="panel">{{ message }}</div>
+    {% endfor %}
+{% endif %}
+
+<section class="panel directory-panel">
+    {% if hostels %}
+        {% for hostel in hostels %}
+            <div class="page-intro">
+                <div>
+                    <h2>{{ hostel.name }}</h2>
+                    <p>Block: {{ hostel.block }}</p>
+                </div>
+                <span>{{ hostel.rooms.count }} room{{ hostel.rooms.count|pluralize }}</span>
+            </div>
+
+            {% if hostel.rooms.exists %}
+                <div class="table-wrap">
+                    <table class="student-table">
+                        <thead>
+                            <tr>
+                                <th>Room number</th>
+                                <th>Capacity</th>
+                                <th>Occupied</th>
+                                <th>Available beds</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for room in hostel.rooms.all %}
+                                <tr>
+                                    <td><span class="student-id">{{ room.room_number }}</span></td>
+                                    <td>{{ room.capacity }}</td>
+                                    <td>{{ room.occupied_count }}</td>
+                                    <td>{{ room.available_beds }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <h3>No rooms added yet</h3>
+                    <p>Create a room for this hostel to get started.</p>
+                </div>
+            {% endif %}
+        {% endfor %}
+    {% else %}
+        <div class="empty-state">
+            <span class="empty-icon" aria-hidden="true">▤</span>
+            <h3>No hostels registered</h3>
+            <p>Add a hostel before creating its rooms.</p>
+            <a class="button" href="{% url 'rooms:hostel_add' %}">＋ Add first hostel</a>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}
