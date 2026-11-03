@@ -11,6 +11,12 @@
 
 {% block header_actions %}
 <a class="button button-secondary" href="{% url 'student_detail' student.pk %}">← Back to Student Profile</a>
+
+{% if request.user.is_staff and allocation and allocation.status == "ACTIVE" %}
+    <a class="button button-primary" href="{% url 'allocations:change_room' student.pk %}">
+        Change Room
+    </a>
+{% endif %}
 {% endblock %}
 
 {% block content %}
@@ -68,13 +74,13 @@
         </div>
     {% else %}
         <div class="message info" role="status">
-    <span class="message-mark" aria-hidden="true">i</span>
-    <span>
-        <strong>No Active Allocation</strong>
-        <br>
-        This student does not currently have an allocated room.
-    </span>
-</div>
+            <span class="message-mark" aria-hidden="true">i</span>
+            <span>
+                <strong>No Active Allocation</strong>
+                <br>
+                This student does not currently have an allocated room.
+            </span>
+        </div>
     {% endif %}
 </section>
 
