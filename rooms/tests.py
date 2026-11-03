@@ -352,6 +352,11 @@ class RoomAvailabilityAndDetailsTests(TestCase):
         self.assertContains(response, "4")
         self.assertContains(response, "2")
 
+        # Explicitly verify available beds in rendered HTML.
+        self.assertContains(response, "Available Beds")
+        self.assertContains(response, "<td>2</td>", html=True)
+
+        # Verify the model calculation too.
         self.assertEqual(self.partial_room.available_beds, 2)
 
     def test_non_admin_cannot_view_available_rooms(self):
