@@ -1,0 +1,83 @@
+
+{% extends "accounts/base.html" %}
+
+{% block title %}Room Details | {{ student.name }}{% endblock %}
+{% block section_label %}STUDENT MANAGEMENT{% endblock %}
+{% block page_title %}Current Room Allocation{% endblock %}
+
+{% block page_subtitle %}
+<p class="topbar-subtitle">View the current hostel and room allocation for this student.</p>
+{% endblock %}
+
+{% block header_actions %}
+<a class="button button-secondary" href="{% url 'student_detail' student.pk %}">← Back to Student Profile</a>
+{% endblock %}
+
+{% block content %}
+
+<section class="detail-hero">
+    <span class="detail-avatar" aria-hidden="true">{{ student.name|first|upper }}</span>
+    <div>
+        <h2>{{ student.name }}</h2>
+        <p>{{ student.usn }} <span aria-hidden="true">·</span> {{ student.department }}</p>
+    </div>
+</section>
+
+<section class="panel">
+    <div class="panel-heading">
+        <div>
+            <h2>Room Allocation Details</h2>
+            <p>Current accommodation information</p>
+        </div>
+        {% if allocation %}
+            <span class="year-badge">ACTIVE</span>
+        {% endif %}
+    </div>
+
+    {% if allocation %}
+        <div class="detail-grid">
+            <div class="detail-item">
+                <span class="detail-label">Student name</span>
+                <span class="detail-value">{{ student.name }}</span>
+            </div>
+
+            <div class="detail-item">
+                <span class="detail-label">USN</span>
+                <span class="detail-value">{{ student.usn }}</span>
+            </div>
+
+            <div class="detail-item">
+                <span class="detail-label">Hostel name</span>
+                <span class="detail-value">{{ allocation.room.hostel.name }}</span>
+            </div>
+
+            <div class="detail-item">
+                <span class="detail-label">Room number</span>
+                <span class="detail-value">{{ allocation.room.room_number }}</span>
+            </div>
+
+            <div class="detail-item">
+                <span class="detail-label">Allocation Date:</span>
+                <span class="detail-value">{{ allocation.allocated_at|date:"M j, Y" }}</span>
+            </div>
+
+            <div class="detail-item">
+                <span class="detail-label">Allocation status</span>
+                <span class="detail-value">{{ allocation.status }}</span>
+            </div>
+        </div>
+    {% else %}
+        <div class="message info" role="status">
+    <span class="message-mark" aria-hidden="true">i</span>
+    <span>
+        <strong>No Active Allocation</strong>
+        <br>
+        This student does not currently have an allocated room.
+    </span>
+</div>
+    {% endif %}
+</section>
+
+<a class="detail-back" href="{% url 'student_detail' student.pk %}">← Return to student profile</a>
+
+{% endblock %}
