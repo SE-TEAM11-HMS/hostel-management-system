@@ -1,0 +1,43 @@
+
+{% extends "accounts/base.html" %}
+
+{% block title %}Add hostel | HostelHQ{% endblock %}
+{% block section_label %}HOSTEL MANAGEMENT{% endblock %}
+{% block page_title %}Add hostel{% endblock %}
+{% block page_subtitle %}
+<p class="topbar-subtitle">Register a hostel and its block details.</p>
+{% endblock %}
+
+{% block content %}
+<div class="page-intro">
+    <div>
+        <h2>Hostel information</h2>
+        <p>Enter the details of the new hostel.</p>
+    </div>
+</div>
+
+<section class="panel">
+    <form method="post">
+        {% csrf_token %}
+
+        {{ form.non_field_errors }}
+
+        <div class="form-field">
+            <label for="{{ form.name.id_for_label }}">Hostel name</label>
+            {{ form.name }}
+            {{ form.name.errors }}
+        </div>
+
+        <div class="form-field">
+            <label for="{{ form.block.id_for_label }}">Block</label>
+            {{ form.block }}
+            {{ form.block.errors }}
+        </div>
+
+        <div class="table-actions">
+            <button type="submit" class="button">Save hostel</button>
+            <a class="table-action" href="{% url 'rooms:room_list' %}">Cancel</a>
+        </div>
+    </form>
+</section>
+{% endblock %}

@@ -1,0 +1,52 @@
+
+{% extends "accounts/base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Room Details</h2>
+
+    <div class="card mt-3">
+        <div class="card-header">
+            <h4>Room {{ room.room_number }}</h4>
+        </div>
+
+        <div class="card-body">
+            <table class="table table-bordered">
+                <tr>
+                    <th>Hostel Name</th>
+                    <td>{{ room.hostel.name }}</td>
+                </tr>
+                <tr>
+                    <th>Block</th>
+                    <td>{{ room.hostel.block }}</td>
+                </tr>
+                <tr>
+                    <th>Room Number</th>
+                    <td>{{ room.room_number }}</td>
+                </tr>
+                <tr>
+                    <th>Total Capacity</th>
+                    <td>{{ room.capacity }}</td>
+                </tr>
+                <tr>
+                    <th>Occupied Count</th>
+                    <td>{{ room.occupied_count }}</td>
+                </tr>
+                <tr>
+                    <th>Available Beds</th>
+                    <td>{{ room.available_beds }}</td>
+                </tr>
+            </table>
+
+            <a href="{% url 'rooms:available_rooms' %}"
+               class="btn btn-primary">Available Rooms</a>
+
+            <a href="{% url 'rooms:occupied_rooms' %}"
+               class="btn btn-secondary">Occupied Rooms</a>
+
+            <a href="{% url 'rooms:room_list' %}"
+               class="btn btn-outline-dark">Back to Room Management</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
