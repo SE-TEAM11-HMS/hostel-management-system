@@ -1,4 +1,6 @@
 
+from unittest.mock import patch
+
 from django.contrib.auth import get_user_model
 from django.contrib import admin
 from django.test import TestCase, RequestFactory
@@ -6,7 +8,11 @@ from django.urls import reverse
 
 from students.models import Student
 from rooms.models import Hostel, Room
-from rooms.services import RoomFullError, RoomNotFoundError
+from rooms.services import (
+    RoomFullError,
+    RoomNotFoundError,
+    RoomNotOccupiedError,
+)
 
 from .models import Allocation
 from .admin import AllocationAdmin
@@ -14,6 +20,8 @@ from .services import (
     AllocationService,
     StudentNotFoundError,
     StudentAlreadyAllocatedError,
+    ActiveAllocationNotFoundError,
+    SameRoomError,
 )
 
 
@@ -35,6 +43,13 @@ class AllocationServiceTests(TestCase):
             occupied_count=0,
         )
 
+        self.new_room = Room.objects.create(
+            hostel=self.hostel,
+            room_number="102",
+            capacity=2,
+            occupied_count=0,
+        )
+
         self.student = Student.objects.create(
             usn="TEST001",
             name="Test Student",
@@ -52,10 +67,7 @@ class AllocationServiceTests(TestCase):
 
         self.assertEqual(allocation.student, self.student)
         self.assertEqual(allocation.room, self.room)
-        self.assertEqual(
-            allocation.status,
-            Allocation.Status.ACTIVE,
-        )
+        self.assertEqual(allocation.status, Allocation.Status.ACTIVE)
         self.assertIsNone(allocation.vacated_at)
 
         self.room.refresh_from_db()
@@ -163,6 +175,171 @@ class AllocationServiceTests(TestCase):
             0,
         )
 
+    # HOSTEL-30 TESTS
+
+    def test_successful_room_change(self):
+        old_allocation = AllocationService.allocate_room(
+            self.student.id,
+            self.room.id,
+        )
+
+        new_allocation = AllocationService.change_room(
+            self.student.id,
+            self.new_room.id,
+        )
+
+        old_allocation.refresh_from_db()
+        self.room.refresh_from_db()
+        self.new_room.refresh_from_db()
+
+        self.assertEqual(
+            old_allocation.status,
+            Allocation.Status.VACATED,
+        )
+        self.assertIsNotNone(old_allocation.vacated_at)
+
+        self.assertEqual(
+            new_allocation.status,
+            Allocation.Status.ACTIVE,
+        )
+        self.assertEqual(new_allocation.room, self.new_room)
+
+        self.assertEqual(self.room.occupied_count, 0)
+        self.assertEqual(self.new_room.occupied_count, 1)
+
+        self.assertEqual(
+            Allocation.objects.filter(
+                student=self.student,
+                status=Allocation.Status.ACTIVE,
+            ).count(),
+            1,
+        )
+
+    def test_change_to_full_room_is_rejected(self):
+        AllocationService.allocate_room(
+            self.student.id,
+            self.room.id,
+        )
+
+        self.new_room.occupied_count = self.new_room.capacity
+        self.new_room.save()
+
+        with self.assertRaises(RoomFullError):
+            AllocationService.change_room(
+                self.student.id,
+                self.new_room.id,
+            )
+
+        old_allocation = Allocation.objects.get(
+            student=self.student,
+            status=Allocation.Status.ACTIVE,
+        )
+
+        self.room.refresh_from_db()
+        self.new_room.refresh_from_db()
+
+        self.assertEqual(old_allocation.room, self.room)
+        self.assertEqual(old_allocation.vacated_at, None)
+        self.assertEqual(self.room.occupied_count, 1)
+        self.assertEqual(
+            self.new_room.occupied_count,
+            self.new_room.capacity,
+        )
+
+    def test_change_to_same_room_is_rejected(self):
+        AllocationService.allocate_room(
+            self.student.id,
+            self.room.id,
+        )
+
+        with self.assertRaises(SameRoomError):
+            AllocationService.change_room(
+                self.student.id,
+                self.room.id,
+            )
+
+        self.room.refresh_from_db()
+        self.assertEqual(self.room.occupied_count, 1)
+
+        self.assertEqual(
+            Allocation.objects.filter(
+                student=self.student,
+                status=Allocation.Status.ACTIVE,
+            ).count(),
+            1,
+        )
+
+    def test_change_room_without_active_allocation_is_rejected(self):
+        with self.assertRaises(ActiveAllocationNotFoundError):
+            AllocationService.change_room(
+                self.student.id,
+                self.new_room.id,
+            )
+
+        self.new_room.refresh_from_db()
+        self.assertEqual(self.new_room.occupied_count, 0)
+
+    def test_change_room_with_invalid_student_is_rejected(self):
+        with self.assertRaises(StudentNotFoundError):
+            AllocationService.change_room(
+                999999,
+                self.new_room.id,
+            )
+
+    def test_change_room_with_invalid_room_is_rejected(self):
+        AllocationService.allocate_room(
+            self.student.id,
+            self.room.id,
+        )
+
+        with self.assertRaises(RoomNotFoundError):
+            AllocationService.change_room(
+                self.student.id,
+                999999,
+            )
+
+        self.room.refresh_from_db()
+        self.assertEqual(self.room.occupied_count, 1)
+
+    def test_room_change_rolls_back_if_old_room_release_fails(self):
+        old_allocation = AllocationService.allocate_room(
+            self.student.id,
+            self.room.id,
+        )
+
+        with patch(
+            "allocations.services.RoomService.release_bed",
+            side_effect=RoomNotOccupiedError(
+                "Simulated room release failure."
+            ),
+        ):
+            with self.assertRaises(RoomNotOccupiedError):
+                AllocationService.change_room(
+                    self.student.id,
+                    self.new_room.id,
+                )
+
+        old_allocation.refresh_from_db()
+        self.room.refresh_from_db()
+        self.new_room.refresh_from_db()
+
+        self.assertEqual(
+            old_allocation.status,
+            Allocation.Status.ACTIVE,
+        )
+        self.assertIsNone(old_allocation.vacated_at)
+
+        self.assertEqual(self.room.occupied_count, 1)
+        self.assertEqual(self.new_room.occupied_count, 0)
+
+        self.assertEqual(
+            Allocation.objects.filter(
+                student=self.student,
+                status=Allocation.Status.ACTIVE,
+            ).count(),
+            1,
+        )
+
 
 class AllocationPermissionTests(TestCase):
 
@@ -191,6 +368,13 @@ class AllocationPermissionTests(TestCase):
             occupied_count=0,
         )
 
+        self.new_room = Room.objects.create(
+            hostel=self.hostel,
+            room_number="202",
+            capacity=2,
+            occupied_count=0,
+        )
+
         self.student = Student.objects.create(
             usn="TEST002",
             name="Permission Test Student",
@@ -201,6 +385,10 @@ class AllocationPermissionTests(TestCase):
         )
 
         self.url = reverse("allocations:allocate_room")
+        self.change_url = reverse(
+            "allocations:change_room",
+            args=[self.student.id],
+        )
 
     def test_anonymous_user_cannot_allocate_room(self):
         response = self.client.post(
@@ -252,10 +440,7 @@ class AllocationPermissionTests(TestCase):
             },
         )
 
-        self.assertRedirects(
-            response,
-            self.url,
-        )
+        self.assertRedirects(response, self.url)
 
         self.room.refresh_from_db()
         self.assertEqual(self.room.occupied_count, 1)
@@ -314,6 +499,79 @@ class AllocationPermissionTests(TestCase):
         response = self.client.put(self.url)
 
         self.assertEqual(response.status_code, 405)
+
+    # HOSTEL-30 VIEW PERMISSION TESTS
+
+    def test_anonymous_user_cannot_change_room(self):
+        response = self.client.post(
+            self.change_url,
+            {"room_id": self.new_room.id},
+        )
+
+        self.assertEqual(response.status_code, 302)
+
+    def test_normal_student_cannot_change_room(self):
+        AllocationService.allocate_room(
+            self.student.id,
+            self.room.id,
+        )
+
+        self.client.force_login(self.student_user)
+
+        response = self.client.post(
+            self.change_url,
+            {"room_id": self.new_room.id},
+        )
+
+        self.assertEqual(response.status_code, 403)
+
+        self.room.refresh_from_db()
+        self.new_room.refresh_from_db()
+
+        self.assertEqual(self.room.occupied_count, 1)
+        self.assertEqual(self.new_room.occupied_count, 0)
+
+    def test_admin_can_view_change_room_page(self):
+        AllocationService.allocate_room(
+            self.student.id,
+            self.room.id,
+        )
+
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(self.change_url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.student.name)
+
+    def test_admin_can_change_student_room(self):
+        AllocationService.allocate_room(
+            self.student.id,
+            self.room.id,
+        )
+
+        self.client.force_login(self.admin_user)
+
+        response = self.client.post(
+            self.change_url,
+            {"room_id": self.new_room.id},
+        )
+
+        self.assertRedirects(response, self.change_url)
+
+        self.room.refresh_from_db()
+        self.new_room.refresh_from_db()
+
+        self.assertEqual(self.room.occupied_count, 0)
+        self.assertEqual(self.new_room.occupied_count, 1)
+
+        self.assertTrue(
+            Allocation.objects.filter(
+                student=self.student,
+                room=self.new_room,
+                status=Allocation.Status.ACTIVE,
+            ).exists()
+        )
 
 
 class AllocationAdminPermissionTests(TestCase):

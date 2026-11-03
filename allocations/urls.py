@@ -10,4 +10,9 @@ urlpatterns = [
         views.allocate_room,
         name="allocate_room",
     ),
+    path(
+        "change-room/<int:student_id>/",
+        views.change_room,
+        name="change_room",
+    ),
 ]
