@@ -1,0 +1,60 @@
+
+{% extends "accounts/base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Occupied Rooms</h2>
+    <p>View rooms that currently have at least one occupant.</p>
+
+    <form method="get" class="mb-3">
+        <label for="hostel" class="form-label">Filter by Hostel</label>
+        <select name="hostel" id="hostel" class="form-select">
+            <option value="">All Hostels</option>
+            {% for hostel in hostels %}
+                <option value="{{ hostel.id }}"
+                    {% if selected_hostel == hostel.id|stringformat:"s" %}selected{% endif %}>
+                    {{ hostel.name }} - {{ hostel.block }}
+                </option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-primary mt-2">Apply Filter</button>
+        <a href="{% url 'rooms:occupied_rooms' %}" class="btn btn-secondary mt-2">Clear Filter</a>
+    </form>
+
+    {% if rooms %}
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>Hostel</th>
+                        <th>Room Number</th>
+                        <th>Capacity</th>
+                        <th>Occupied</th>
+                        <th>Available Beds</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for room in rooms %}
+                    <tr>
+                        <td>{{ room.hostel.name }} - {{ room.hostel.block }}</td>
+                        <td>{{ room.room_number }}</td>
+                        <td>{{ room.capacity }}</td>
+                        <td>{{ room.occupied_count }}</td>
+                        <td>{{ room.available_beds }}</td>
+                        <td>
+                            <a href="{% url 'rooms:room_detail' room.id %}"
+                               class="btn btn-sm btn-info">View Details</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            No occupied rooms found for the selected hostel.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
