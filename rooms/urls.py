@@ -5,7 +5,25 @@ from . import views
 app_name = "rooms"
 
 urlpatterns = [
+    # Hostel and room management
     path("rooms/", views.room_list, name="room_list"),
     path("hostels/add/", views.add_hostel, name="hostel_add"),
     path("rooms/add/", views.add_room, name="room_add"),
+
+    # HOSTEL-25: Room availability and details
+    path(
+        "rooms/available/",
+        views.available_rooms,
+        name="available_rooms",
+    ),
+    path(
+        "rooms/occupied/",
+        views.occupied_rooms,
+        name="occupied_rooms",
+    ),
+    path(
+        "rooms/<int:room_id>/",
+        views.room_detail,
+        name="room_detail",
+    ),
 ]
