@@ -38,6 +38,10 @@ class Room(models.Model):
         default=0,
     )
 
+    @property
+    def available_beds(self):
+        return self.capacity - self.occupied_count
+
     class Meta:
         ordering = ["hostel__name", "room_number"]
         constraints = [
