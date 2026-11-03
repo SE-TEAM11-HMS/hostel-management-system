@@ -1,4 +1,4 @@
-
+```django
 {% extends "accounts/base.html" %}
 
 {% block title %}Room Details | {{ student.name }}{% endblock %}
@@ -15,6 +15,10 @@
 {% if request.user.is_staff and allocation and allocation.status == "ACTIVE" %}
     <a class="button button-primary" href="{% url 'allocations:change_room' student.pk %}">
         Change Room
+    </a>
+
+    <a class="button button-primary" href="{% url 'allocations:vacate_room' student.pk %}">
+        Vacate Room
     </a>
 {% endif %}
 {% endblock %}
@@ -87,3 +91,4 @@
 <a class="detail-back" href="{% url 'student_detail' student.pk %}">← Return to student profile</a>
 
 {% endblock %}
+```
