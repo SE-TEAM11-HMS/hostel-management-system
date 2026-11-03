@@ -1,3 +1,4 @@
+
 from django.urls import path
 from . import views
 
@@ -8,6 +9,11 @@ urlpatterns = [
     path("rooms/", views.room_list, name="room_list"),
     path("hostels/add/", views.add_hostel, name="hostel_add"),
     path("rooms/add/", views.add_room, name="room_add"),
+    path(
+        "rooms/<int:room_id>/edit/",
+        views.edit_room,
+        name="room_edit",
+    ),
 
     # Room availability and details (HOSTEL-25)
     path(

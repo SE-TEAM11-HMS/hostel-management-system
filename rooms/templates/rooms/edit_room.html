@@ -1,0 +1,53 @@
+
+{% extends "accounts/base.html" %}
+
+{% block title %}Edit room | HostelHQ{% endblock %}
+{% block section_label %}HOSTEL MANAGEMENT{% endblock %}
+{% block page_title %}Edit room{% endblock %}
+
+{% block page_subtitle %}
+<p class="topbar-subtitle">Update room details and capacity.</p>
+{% endblock %}
+
+{% block content %}
+<div class="page-intro">
+    <div>
+        <h2>Room information</h2>
+        <p>
+            Update room {{ room.room_number }}.
+            Current occupancy: {{ room.occupied_count }}.
+        </p>
+    </div>
+</div>
+
+<section class="panel">
+    <form method="post">
+        {% csrf_token %}
+
+        {{ form.non_field_errors }}
+
+        <div class="form-field">
+            <label for="{{ form.hostel.id_for_label }}">Hostel</label>
+            {{ form.hostel }}
+            {{ form.hostel.errors }}
+        </div>
+
+        <div class="form-field">
+            <label for="{{ form.room_number.id_for_label }}">Room number</label>
+            {{ form.room_number }}
+            {{ form.room_number.errors }}
+        </div>
+
+        <div class="form-field">
+            <label for="{{ form.capacity.id_for_label }}">Room capacity</label>
+            {{ form.capacity }}
+            {{ form.capacity.errors }}
+        </div>
+
+        <div class="table-actions">
+            <button type="submit" class="button">Update room</button>
+            <a class="table-action" href="{% url 'rooms:room_list' %}">Cancel</a>
+        </div>
+    </form>
+</section>
+{% endblock %}
