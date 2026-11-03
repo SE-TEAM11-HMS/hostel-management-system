@@ -214,6 +214,7 @@ def vacate_room(request, student_id):
         except (
             StudentNotFoundError,
             ActiveAllocationNotFoundError,
+            RoomNotFoundError,
             RoomNotOccupiedError,
             AllocationError,
         ) as error:
