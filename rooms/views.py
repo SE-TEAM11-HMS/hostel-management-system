@@ -27,7 +27,6 @@ def filter_rooms_by_hostel(request, rooms):
 
 
 # HOSTEL-24: Room management
-
 @login_required
 @require_http_methods(["GET"])
 def room_list(request):
@@ -46,6 +45,78 @@ def room_list(request):
             "hostels": hostels,
             "rooms": rooms,
         },
+    )
+
+
+@login_required
+@require_http_methods(["GET"])
+def available_rooms(request):
+    if not administrator_required(request):
+        return HttpResponseForbidden(
+            "You do not have permission to view room availability."
+        )
+
+    rooms = Room.objects.select_related("hostel").filter(
+        occupied_count__lt=F("capacity")
+    )
+
+    rooms, selected_hostel = filter_rooms_by_hostel(request, rooms)
+    hostels = Hostel.objects.all()
+
+    return render(
+        request,
+        "rooms/available_rooms.html",
+        {
+            "rooms": rooms,
+            "hostels": hostels,
+            "selected_hostel": selected_hostel,
+        },
+    )
+
+
+@login_required
+@require_http_methods(["GET"])
+def occupied_rooms(request):
+    if not administrator_required(request):
+        return HttpResponseForbidden(
+            "You do not have permission to view occupied rooms."
+        )
+
+    rooms = Room.objects.select_related("hostel").filter(
+        occupied_count__gt=0
+    )
+
+    rooms, selected_hostel = filter_rooms_by_hostel(request, rooms)
+    hostels = Hostel.objects.all()
+
+    return render(
+        request,
+        "rooms/occupied_rooms.html",
+        {
+            "rooms": rooms,
+            "hostels": hostels,
+            "selected_hostel": selected_hostel,
+        },
+    )
+
+
+@login_required
+@require_http_methods(["GET"])
+def room_detail(request, room_id):
+    if not administrator_required(request):
+        return HttpResponseForbidden(
+            "You do not have permission to view room details."
+        )
+
+    room = get_object_or_404(
+        Room.objects.select_related("hostel"),
+        pk=room_id,
+    )
+
+    return render(
+        request,
+        "rooms/room_detail.html",
+        {"room": room},
     )
 
 
