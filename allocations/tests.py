@@ -1,9 +1,12 @@
 
+import threading
+from queue import Queue
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.contrib import admin
-from django.test import TestCase, RequestFactory
+from django.db import close_old_connections, connection
+from django.test import TestCase, TransactionTestCase, RequestFactory
 from django.urls import reverse
 
 from students.models import Student
@@ -58,6 +61,8 @@ class AllocationServiceTests(TestCase):
             department="Computer Science",
             academic_year=3,
         )
+
+    # ALLOCATION TESTS
 
     def test_successful_room_allocation(self):
         allocation = AllocationService.allocate_room(
@@ -175,7 +180,7 @@ class AllocationServiceTests(TestCase):
             0,
         )
 
-    # HOSTEL-30 TESTS
+    # HOSTEL-30 ROOM CHANGE TESTS
 
     def test_successful_room_change(self):
         old_allocation = AllocationService.allocate_room(
@@ -239,7 +244,7 @@ class AllocationServiceTests(TestCase):
         self.new_room.refresh_from_db()
 
         self.assertEqual(old_allocation.room, self.room)
-        self.assertEqual(old_allocation.vacated_at, None)
+        self.assertIsNone(old_allocation.vacated_at)
         self.assertEqual(self.room.occupied_count, 1)
         self.assertEqual(
             self.new_room.occupied_count,
@@ -339,6 +344,96 @@ class AllocationServiceTests(TestCase):
             ).count(),
             1,
         )
+
+    # HOSTEL-32 VACATION TESTS
+
+    def test_successful_room_vacation(self):
+        allocation = AllocationService.allocate_room(
+            self.student.id,
+            self.room.id,
+        )
+
+        vacated = AllocationService.vacate_room(
+            self.student.id
+        )
+
+        allocation.refresh_from_db()
+        self.room.refresh_from_db()
+
+        self.assertEqual(vacated.id, allocation.id)
+        self.assertEqual(
+            allocation.status,
+            Allocation.Status.VACATED,
+        )
+        self.assertIsNotNone(allocation.vacated_at)
+        self.assertEqual(self.room.occupied_count, 0)
+
+        self.assertFalse(
+            Allocation.objects.filter(
+                student=self.student,
+                status=Allocation.Status.ACTIVE,
+            ).exists()
+        )
+
+        # Previous allocation must remain as history.
+        self.assertTrue(
+            Allocation.objects.filter(
+                pk=allocation.pk
+            ).exists()
+        )
+
+    def test_repeated_vacation_is_rejected(self):
+        AllocationService.allocate_room(
+            self.student.id,
+            self.room.id,
+        )
+
+        AllocationService.vacate_room(self.student.id)
+
+        with self.assertRaises(ActiveAllocationNotFoundError):
+            AllocationService.vacate_room(self.student.id)
+
+        self.room.refresh_from_db()
+        self.assertEqual(self.room.occupied_count, 0)
+
+        self.assertEqual(
+            Allocation.objects.filter(
+                student=self.student,
+            ).count(),
+            1,
+        )
+
+    def test_vacation_without_active_allocation_is_rejected(self):
+        with self.assertRaises(ActiveAllocationNotFoundError):
+            AllocationService.vacate_room(self.student.id)
+
+        self.room.refresh_from_db()
+        self.assertEqual(self.room.occupied_count, 0)
+
+    def test_vacation_rolls_back_if_room_release_fails(self):
+        allocation = AllocationService.allocate_room(
+            self.student.id,
+            self.room.id,
+        )
+
+        with patch(
+            "allocations.services.RoomService.release_bed",
+            side_effect=RoomNotOccupiedError(
+                "Simulated room release failure."
+            ),
+        ):
+            with self.assertRaises(RoomNotOccupiedError):
+                AllocationService.vacate_room(self.student.id)
+
+        allocation.refresh_from_db()
+        self.room.refresh_from_db()
+
+        self.assertEqual(
+            allocation.status,
+            Allocation.Status.ACTIVE,
+        )
+        self.assertIsNone(allocation.vacated_at)
+        self.assertEqual(self.room.occupied_count, 1)
 
 
 class AllocationPermissionTests(TestCase):
@@ -612,4 +707,117 @@ class AllocationAdminPermissionTests(TestCase):
             self.allocation_admin.has_delete_permission(
                 self.request
             )
+        )
+
+
+# HOSTEL-32 MYSQL CONCURRENCY TEST
+
+class AllocationConcurrencyTests(TransactionTestCase):
+
+    reset_sequences = True
+
+    def setUp(self):
+        if connection.vendor != "mysql":
+            self.skipTest("This concurrency test requires MySQL.")
+
+        self.hostel = Hostel.objects.create(
+            name="Concurrency Test Hostel",
+            block="C",
+        )
+
+        self.room = Room.objects.create(
+            hostel=self.hostel,
+            room_number="301",
+            capacity=1,
+            occupied_count=0,
+        )
+
+        self.student1 = Student.objects.create(
+            usn="CONC001",
+            name="Concurrency Student One",
+            email="conc001@example.com",
+            phone="9876543212",
+            department="Computer Science",
+            academic_year=3,
+        )
+
+        self.student2 = Student.objects.create(
+            usn="CONC002",
+            name="Concurrency Student Two",
+            email="conc002@example.com",
+            phone="9876543213",
+            department="Computer Science",
+            academic_year=3,
+        )
+
+    def test_only_one_student_gets_last_available_bed(self):
+        results = Queue()
+        start_barrier = threading.Barrier(2)
+
+        def allocate(student_id):
+            close_old_connections()
+
+            try:
+                start_barrier.wait(timeout=15)
+
+                AllocationService.allocate_room(
+                    student_id,
+                    self.room.id,
+                )
+
+                results.put("SUCCESS")
+
+            except RoomFullError:
+                results.put("FULL")
+
+            except Exception as error:
+                results.put(
+                    f"ERROR: {type(error).__name__}: {error}"
+                )
+
+            finally:
+                close_old_connections()
+
+        threads = [
+            threading.Thread(
+                target=allocate,
+                args=(self.student1.id,),
+            ),
+            threading.Thread(
+                target=allocate,
+                args=(self.student2.id,),
+            ),
+        ]
+
+        for thread in threads:
+            thread.start()
+
+        for thread in threads:
+            thread.join(timeout=30)
+
+        self.assertTrue(
+            all(not thread.is_alive() for thread in threads),
+            "A concurrency test thread did not finish.",
+        )
+
+        outcomes = [
+            results.get_nowait()
+            for _ in threads
+        ]
+
+        self.assertCountEqual(
+            outcomes,
+            ["SUCCESS", "FULL"],
+        )
+
+        self.room.refresh_from_db()
+
+        self.assertEqual(self.room.occupied_count, 1)
+
+        self.assertEqual(
+            Allocation.objects.filter(
+                room=self.room,
+                status=Allocation.Status.ACTIVE,
+            ).count(),
+            1,
         )
