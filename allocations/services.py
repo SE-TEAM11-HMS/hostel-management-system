@@ -1,6 +1,5 @@
 
 from django.db import transaction
-from django.utils import timezone
 
 from students.models import Student
 from rooms.models import Room
@@ -30,13 +29,12 @@ class AllocationService:
     @staticmethod
     @transaction.atomic
     def allocate_room(student_id, room_id):
-
-        # Lock the student row.
+        # Validate and retrieve the student safely.
         try:
             student = Student.objects.select_for_update().get(
                 pk=student_id
             )
-        except Student.DoesNotExist:
+        except (Student.DoesNotExist, ValueError, TypeError):
             raise StudentNotFoundError(
                 "The selected student does not exist."
             )
@@ -50,51 +48,22 @@ class AllocationService:
                 "This student already has an active room allocation."
             )
 
-        # Lock the room row to serialize allocations to this room.
+        # Lock and validate the room.
         try:
             Room.objects.select_for_update().get(pk=room_id)
-        except Room.DoesNotExist:
+        except (Room.DoesNotExist, ValueError, TypeError):
             raise RoomNotFoundError(
                 "The selected room does not exist."
             )
 
-        # Reserve a bed using the existing RoomService.
+        # Reserve a bed through the existing RoomService.
         RoomService.reserve_bed(room_id)
 
-        # Create the allocation record.
+        # Create the active allocation.
         allocation = Allocation.objects.create(
             student=student,
             room_id=room_id,
             status=Allocation.Status.ACTIVE,
-        )
-
-        return allocation
-
-    @staticmethod
-    @transaction.atomic
-    def vacate_room(allocation_id):
-
-        try:
-            allocation = Allocation.objects.select_for_update().get(
-                pk=allocation_id,
-                status=Allocation.Status.ACTIVE,
-            )
-        except Allocation.DoesNotExist:
-            raise AllocationError(
-                "Active allocation not found."
-            )
-
-        # Lock the room before releasing its bed.
-        Room.objects.select_for_update().get(
-            pk=allocation.room_id
-        )
-
-        RoomService.release_bed(allocation.room_id)
-
-        allocation.status = Allocation.Status.VACATED
-        allocation.vacated_at = timezone.now()
-        allocation.save(
-            update_fields=["status", "vacated_at"]
         )
 
         return allocation

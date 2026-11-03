@@ -1,6 +1,7 @@
 
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.contrib import admin
+from django.test import TestCase, RequestFactory
 from django.urls import reverse
 
 from students.models import Student
@@ -8,6 +9,7 @@ from rooms.models import Hostel, Room
 from rooms.services import RoomFullError, RoomNotFoundError
 
 from .models import Allocation
+from .admin import AllocationAdmin
 from .services import (
     AllocationService,
     StudentNotFoundError,
@@ -165,7 +167,7 @@ class AllocationServiceTests(TestCase):
 class AllocationPermissionTests(TestCase):
 
     def setUp(self):
-        self.admin = User.objects.create_user(
+        self.admin_user = User.objects.create_user(
             username="allocation_admin",
             password="TestPassword!234",
             is_staff=True,
@@ -240,7 +242,7 @@ class AllocationPermissionTests(TestCase):
         )
 
     def test_admin_can_allocate_room(self):
-        self.client.force_login(self.admin)
+        self.client.force_login(self.admin_user)
 
         response = self.client.post(
             self.url,
@@ -252,7 +254,7 @@ class AllocationPermissionTests(TestCase):
 
         self.assertRedirects(
             response,
-            reverse("accounts:dashboard"),
+            self.url,
         )
 
         self.room.refresh_from_db()
@@ -265,9 +267,91 @@ class AllocationPermissionTests(TestCase):
             ).exists()
         )
 
-    def test_allocation_endpoint_rejects_get_request(self):
-        self.client.force_login(self.admin)
+    def test_admin_can_view_allocation_form(self):
+        self.client.force_login(self.admin_user)
 
         response = self.client.get(self.url)
 
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            "Allocate Room to Student",
+        )
+
+    def test_malformed_student_id_is_handled(self):
+        self.client.force_login(self.admin_user)
+
+        response = self.client.post(
+            self.url,
+            {
+                "student_id": "abc",
+                "room_id": self.room.id,
+            },
+            follow=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "does not exist")
+
+    def test_malformed_room_id_is_handled(self):
+        self.client.force_login(self.admin_user)
+
+        response = self.client.post(
+            self.url,
+            {
+                "student_id": self.student.id,
+                "room_id": "abc",
+            },
+            follow=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "does not exist")
+
+    def test_allocation_endpoint_rejects_other_methods(self):
+        self.client.force_login(self.admin_user)
+
+        response = self.client.put(self.url)
+
         self.assertEqual(response.status_code, 405)
+
+
+class AllocationAdminPermissionTests(TestCase):
+
+    def setUp(self):
+        self.admin_user = User.objects.create_user(
+            username="allocation_admin_permissions",
+            password="TestPassword!234",
+            is_staff=True,
+        )
+
+        self.allocation_admin = AllocationAdmin(
+            Allocation,
+            admin.site,
+        )
+
+        self.request = RequestFactory().get(
+            "/admin/allocations/allocation/"
+        )
+        self.request.user = self.admin_user
+
+    def test_admin_cannot_add_allocation_directly(self):
+        self.assertFalse(
+            self.allocation_admin.has_add_permission(
+                self.request
+            )
+        )
+
+    def test_admin_cannot_change_allocation_directly(self):
+        self.assertFalse(
+            self.allocation_admin.has_change_permission(
+                self.request
+            )
+        )
+
+    def test_admin_cannot_delete_allocation_directly(self):
+        self.assertFalse(
+            self.allocation_admin.has_delete_permission(
+                self.request
+            )
+        )
