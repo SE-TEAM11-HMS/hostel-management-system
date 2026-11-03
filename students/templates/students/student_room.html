@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Room Details</title>
+</head>
+<body>
+    <h1>Current Room Allocation</h1>
+
+    <h2>Student Details</h2>
+    <p><strong>Name:</strong> {{ student.name }}</p>
+    <p><strong>USN:</strong> {{ student.usn }}</p>
+
+    {% if allocation %}
+        <h2>Current Accommodation</h2>
+        <p><strong>Hostel:</strong> {{ allocation.room.hostel.name }}</p>
+        <p><strong>Room Number:</strong> {{ allocation.room.room_number }}</p>
+        <p><strong>Allocation Date:</strong> {{ allocation.allocated_at }}</p>
+        <p><strong>Status:</strong> {{ allocation.status }}</p>
+    {% else %}
+        <h2>No Active Allocation</h2>
+        <p>This student does not currently have an allocated room.</p>
+    {% endif %}
+
+    <a href="{% url 'student_detail' student.pk %}">Back to Student Details</a>
+</body>
+</html>

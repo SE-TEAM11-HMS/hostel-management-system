@@ -1,4 +1,4 @@
-
+from allocations.models import Allocation
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
@@ -97,3 +97,31 @@ def student_delete(request, pk):
     messages.success(request, "Student deleted successfully.")
 
     return redirect("student_list")
+
+@login_required
+def student_room(request, pk):
+    if not request.user.is_staff:
+        return HttpResponseForbidden(
+            "You do not have permission to view room details."
+        )
+
+    student = get_object_or_404(Student, pk=pk)
+
+    allocation = (
+        Allocation.objects
+        .filter(
+            student=student,
+            status=Allocation.Status.ACTIVE,
+        )
+        .select_related("room", "room__hostel")
+        .first()
+    )
+
+    return render(
+        request,
+        "students/student_room.html",
+        {
+            "student": student,
+            "allocation": allocation,
+        },
+    )

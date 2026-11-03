@@ -1,7 +1,9 @@
-
+from allocations.models import Allocation
+from rooms.models import Hostel, Room
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 
 from .forms import StudentForm
 from .models import Student
@@ -588,3 +590,112 @@ class StudentViewTest(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Henry King")
+
+class StudentRoomViewTest(TestCase):
+
+    def setUp(self):
+        User = get_user_model()
+
+        self.admin = User.objects.create_user(
+            username="room_admin",
+            password="TestPassword!234",
+            is_staff=True,
+        )
+
+        self.regular_user = User.objects.create_user(
+            username="room_student",
+            password="TestPassword!234",
+            is_staff=False,
+        )
+
+        self.student = Student.objects.create(
+            usn="1AB23CS100",
+            name="Room Test Student",
+            email="roomtest@example.com",
+            phone="9876543210",
+            department="Computer Science",
+            academic_year=2,
+        )
+
+        self.hostel = Hostel.objects.create(
+            name="HOSTEL-29 Test Hostel",
+            block="A",
+        )
+
+        self.room = Room.objects.create(
+            hostel=self.hostel,
+            room_number="301",
+            capacity=2,
+            occupied_count=1,
+        )
+
+        self.url = reverse(
+            "student_room",
+            args=[self.student.pk],
+        )
+
+    def test_admin_can_view_active_room_details(self):
+        self.client.force_login(self.admin)
+
+        allocation = Allocation.objects.create(
+            student=self.student,
+            room=self.room,
+            status=Allocation.Status.ACTIVE,
+        )
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "HOSTEL-29 Test Hostel")
+        self.assertContains(response, "301")
+        self.assertContains(response, "Allocation Date:")
+        self.assertContains(
+            response,
+            str(allocation.allocated_at.year),
+        )
+
+    def test_student_without_active_allocation_sees_empty_message(self):
+        self.client.force_login(self.admin)
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "No Active Allocation")
+        self.assertIsNone(response.context["allocation"])
+
+    def test_inactive_allocation_is_not_displayed_as_current(self):
+        self.client.force_login(self.admin)
+
+        Allocation.objects.create(
+            student=self.student,
+            room=self.room,
+            status=Allocation.Status.VACATED,
+            vacated_at=timezone.now(),
+        )
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNone(response.context["allocation"])
+        self.assertContains(response, "No Active Allocation")
+
+    def test_invalid_student_id_returns_404(self):
+        self.client.force_login(self.admin)
+
+        response = self.client.get(
+            reverse("student_room", args=[999999])
+        )
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_non_admin_cannot_view_room_details(self):
+        self.client.force_login(self.regular_user)
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_anonymous_user_is_redirected_to_login(self):
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 302)
