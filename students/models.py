@@ -3,6 +3,7 @@ from django.conf import settings
 from django.core.validators import RegexValidator
 from django.db import models
 from django.db.models import Q
+from django.core.exceptions import ValidationError
 
 
 class Student(models.Model):
@@ -21,15 +22,14 @@ class Student(models.Model):
     )
 
     department = models.CharField(max_length=100)
-
     academic_year = models.PositiveSmallIntegerField()
 
-    user = models.ForeignKey(
+    user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name="students",
+        related_name="student",
     )
 
     class Meta:
@@ -39,7 +39,7 @@ class Student(models.Model):
                 name="student_academic_year_1_to_4",
             ),
             models.CheckConstraint(
-                condition=models.Q(phone__regex=r"^[0-9]{10}$"),
+                condition=Q(phone__regex=r"^[0-9]{10}$"),
                 name="student_phone_exactly_10_digits",
             ),
         ]
@@ -47,16 +47,11 @@ class Student(models.Model):
     def clean(self):
         super().clean()
 
-        if not self.phone.isascii() or not self.phone.isdigit():
-            from django.core.exceptions import ValidationError
-
-            raise ValidationError({
-                "phone": "Phone number must contain exactly 10 digits."
-            })
-
-        if len(self.phone) != 10:
-            from django.core.exceptions import ValidationError
-
+        if (
+            not self.phone.isascii()
+            or not self.phone.isdigit()
+            or len(self.phone) != 10
+        ):
             raise ValidationError({
                 "phone": "Phone number must contain exactly 10 digits."
             })
