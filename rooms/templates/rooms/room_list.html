@@ -47,15 +47,24 @@
                                 <th>Capacity</th>
                                 <th>Occupied</th>
                                 <th>Available beds</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for room in hostel.rooms.all %}
                                 <tr>
-                                    <td><span class="student-id">{{ room.room_number }}</span></td>
+                                    <td>
+                                        <span class="student-id">{{ room.room_number }}</span>
+                                    </td>
                                     <td>{{ room.capacity }}</td>
                                     <td>{{ room.occupied_count }}</td>
                                     <td>{{ room.available_beds }}</td>
+                                    <td>
+                                        <a class="table-action"
+                                           href="{% url 'rooms:room_edit' room.id %}">
+                                            Edit
+                                        </a>
+                                    </td>
                                 </tr>
                             {% endfor %}
                         </tbody>

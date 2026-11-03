@@ -178,3 +178,56 @@ def add_room(request):
         "rooms/add_room.html",
         {"form": form},
     )
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def edit_room(request, room_id):
+    if not administrator_required(request):
+        return HttpResponseForbidden(
+            "You do not have permission to edit hostel rooms."
+        )
+
+    if request.method == "POST":
+        form = None
+
+        try:
+            with transaction.atomic():
+                room = get_object_or_404(
+                    Room.objects.select_for_update(),
+                    pk=room_id,
+                )
+
+                form = RoomForm(
+                    request.POST,
+                    instance=room,
+                )
+
+                if form.is_valid():
+                    form.save()
+                    saved = True
+                else:
+                    saved = False
+
+        except IntegrityError:
+            form.add_error(
+                "room_number",
+                "This room number already exists in the selected hostel."
+            )
+            saved = False
+
+        if saved:
+            messages.success(request, "Room updated successfully.")
+            return redirect("rooms:room_list")
+
+    else:
+        room = get_object_or_404(Room, pk=room_id)
+        form = RoomForm(instance=room)
+
+    return render(
+        request,
+        "rooms/edit_room.html",
+        {
+            "form": form,
+            "room": room,
+        },
+    )
