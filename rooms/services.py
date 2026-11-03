@@ -1,4 +1,3 @@
-
 from django.db import transaction
 from django.db.models import F
 
@@ -27,8 +26,6 @@ class RoomService:
     @staticmethod
     @transaction.atomic
     def reserve_bed(room_id):
-        """Reserve one bed if the room has available capacity."""
-
         updated = Room.objects.filter(
             pk=room_id,
             occupied_count__lt=F("capacity"),
@@ -51,8 +48,6 @@ class RoomService:
     @staticmethod
     @transaction.atomic
     def release_bed(room_id):
-        """Release one occupied bed."""
-
         updated = Room.objects.filter(
             pk=room_id,
             occupied_count__gt=0,
