@@ -42,9 +42,11 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+
     "accounts",
     "students",
     "rooms",
+    "allocations",  # HOSTEL-28: Room allocation
 ]
 
 MIDDLEWARE = [
