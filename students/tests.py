@@ -591,6 +591,7 @@ class StudentViewTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Henry King")
 
+
 class StudentRoomViewTest(TestCase):
 
     def setUp(self):
@@ -653,6 +654,27 @@ class StudentRoomViewTest(TestCase):
             response,
             str(allocation.allocated_at.year),
         )
+
+    def test_vacate_room_button_appears_for_active_allocation(self):
+        self.client.force_login(self.admin)
+
+        Allocation.objects.create(
+            student=self.student,
+            room=self.room,
+            status=Allocation.Status.ACTIVE,
+        )
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+
+        vacate_url = reverse(
+            "allocations:vacate_room",
+            args=[self.student.pk],
+        )
+
+        self.assertContains(response, f'href="{vacate_url}"')
+        self.assertContains(response, "Vacate Room")
 
     def test_student_without_active_allocation_sees_empty_message(self):
         self.client.force_login(self.admin)
