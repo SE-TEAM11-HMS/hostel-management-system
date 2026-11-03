@@ -1,0 +1,27 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Portal | Hostel Management System</title>
+</head>
+<body>
+    <main>
+        <h1>Welcome to the Student Portal</h1>
+
+        <h2>Your Student Information</h2>
+
+        <p><strong>Name:</strong> {{ student.name }}</p>
+        <p><strong>USN:</strong> {{ student.usn }}</p>
+        <p><strong>Email:</strong> {{ student.email }}</p>
+        <p><strong>Department:</strong> {{ student.department }}</p>
+        <p><strong>Academic Year:</strong> {{ student.academic_year }}</p>
+
+        <form method="POST" action="{% url 'accounts:student_logout' %}">
+            {% csrf_token %}
+            <button type="submit">Logout</button>
+        </form>
+    </main>
+</body>
+</html>
