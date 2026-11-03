@@ -1,4 +1,3 @@
-
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import F
@@ -8,7 +7,11 @@ from django.views.decorators.http import require_http_methods
 
 from students.models import Student
 from rooms.models import Room
-from rooms.services import RoomFullError, RoomNotFoundError
+from rooms.services import (
+    RoomFullError,
+    RoomNotFoundError,
+    RoomNotOccupiedError,
+)
 
 from .models import Allocation
 from .services import (
@@ -138,6 +141,7 @@ def change_room(request, student_id):
                 SameRoomError,
                 RoomFullError,
                 RoomNotFoundError,
+                RoomNotOccupiedError,
                 AllocationError,
             ) as error:
                 messages.error(request, str(error))
