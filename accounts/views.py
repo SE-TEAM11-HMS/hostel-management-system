@@ -3,6 +3,7 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
 from django.shortcuts import redirect, render
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_POST
 
@@ -25,16 +26,30 @@ def get_logged_in_student(user):
         return None
 
 
+def get_safe_next_url(request):
+    """
+    Return the next URL only if it is safe for this host.
+    """
+    next_url = request.POST.get("next") or request.GET.get("next", "")
+
+    if next_url and url_has_allowed_host_and_scheme(
+        url=next_url,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        return next_url
+
+    return None
+
+
 @never_cache
 def admin_login(request):
-    # Administrators can go directly to their dashboard.
-    if request.user.is_authenticated and request.user.is_staff:
-        return redirect("accounts:dashboard")
+    next_url = get_safe_next_url(request)
 
-    next_url = (
-        request.POST.get("next")
-        or request.GET.get("next", "")
-    )
+    # Already authenticated administrators can continue to their
+    # originally requested protected page.
+    if request.user.is_authenticated and request.user.is_staff:
+        return redirect(next_url or "accounts:dashboard")
 
     form = AdminLoginForm(
         request=request,
@@ -43,14 +58,14 @@ def admin_login(request):
 
     if request.method == "POST" and form.is_valid():
         login(request, form.user)
-        return redirect("accounts:dashboard")
+        return redirect(next_url or "accounts:dashboard")
 
     return render(
         request,
         "accounts/login.html",
         {
             "form": form,
-            "next": next_url,
+            "next": next_url or "",
         },
     )
 
