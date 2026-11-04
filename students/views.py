@@ -157,18 +157,26 @@ def student_room(request, pk):
 # HOSTEL-33: Student Account Association and Student Portal
 
 def get_linked_student(user):
-    """Return the student record linked to the authenticated account."""
-    return Student.objects.filter(user=user).first()
+    """Return a student only when exactly one record is linked to the user."""
+    if not user.is_authenticated or user.is_staff:
+        return None
+
+    linked_students = Student.objects.filter(user=user)
+
+    if linked_students.count() != 1:
+        return None
+
+    return linked_students.first()
 
 
 @never_cache
-@login_required
+@login_required(login_url="accounts:student_login")
 def student_portal(request):
     student = get_linked_student(request.user)
 
     if student is None:
         return HttpResponseForbidden(
-            "No student record is associated with this account."
+            "No unique student record is associated with this account."
         )
 
     allocation = (
@@ -192,13 +200,13 @@ def student_portal(request):
 
 
 @never_cache
-@login_required
+@login_required(login_url="accounts:student_login")
 def student_portal_room(request):
     student = get_linked_student(request.user)
 
     if student is None:
         return HttpResponseForbidden(
-            "No student record is associated with this account."
+            "No unique student record is associated with this account."
         )
 
     allocation = (

@@ -789,7 +789,7 @@ class StudentPortalTests(TestCase):
         response = self.client.get(reverse("student_portal"))
 
         self.assertEqual(response.status_code, 302)
-        self.assertIn("/login/", response.url)
+        self.assertIn("/student-login/", response.url)
 
     def test_linked_student_can_access_own_room_page(self):
         self.client.force_login(self.student_user)
@@ -863,3 +863,27 @@ class StudentPortalTests(TestCase):
         self.assertEqual(response.context["student"], self.student)
         self.assertContains(response, "Portal Test Student")
         self.assertNotContains(response, "Other Student")
+
+    def test_student_can_login_and_access_own_portal(self):
+        login_response = self.client.post(
+            reverse("accounts:student_login"),
+            {
+                "username": "portal_student",
+                "password": "PortalPass!234",
+            },
+        )
+
+        self.assertRedirects(
+            login_response,
+            reverse("student_portal"),
+        )
+
+        portal_response = self.client.get(reverse("student_portal"))
+
+        self.assertEqual(portal_response.status_code, 200)
+        self.assertEqual(
+            portal_response.context["student"],
+            self.student,
+        )
+        self.assertContains(portal_response, "Portal Test Student")
+        self.assertNotContains(portal_response, "Other Student")
