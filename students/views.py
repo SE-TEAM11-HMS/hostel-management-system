@@ -1,9 +1,11 @@
+
 from allocations.models import Allocation
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.http import HttpResponseForbidden
 from django.shortcuts import render, redirect, get_object_or_404
+from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_POST
 
 from .forms import StudentForm
@@ -44,23 +46,35 @@ def student_list(request):
             | Q(department__icontains=query)
         )
 
-    return render(request, "students/student_list.html", {"students": students, "query": query})
+    return render(
+        request,
+        "students/student_list.html",
+        {"students": students, "query": query},
+    )
 
 
 @login_required
 def student_detail(request, pk):
     if not request.user.is_staff:
-        return HttpResponseForbidden("You do not have permission to view student details.")
+        return HttpResponseForbidden(
+            "You do not have permission to view student details."
+        )
 
     student = get_object_or_404(Student, pk=pk)
 
-    return render(request, "students/student_detail.html", {"student": student})
+    return render(
+        request,
+        "students/student_detail.html",
+        {"student": student},
+    )
 
 
 @login_required
 def student_update(request, pk):
     if not request.user.is_staff:
-        return HttpResponseForbidden("You do not have permission to update students.")
+        return HttpResponseForbidden(
+            "You do not have permission to update students."
+        )
 
     student = get_object_or_404(Student, pk=pk)
 
@@ -73,30 +87,43 @@ def student_update(request, pk):
     else:
         form = StudentForm(instance=student)
 
-    return render(request, "students/student_update.html", {"form": form, "student": student})
+    return render(
+        request,
+        "students/student_update.html",
+        {"form": form, "student": student},
+    )
 
 
 @login_required
 def student_confirm_delete(request, pk):
     if not request.user.is_staff:
-        return HttpResponseForbidden("You do not have permission to delete students.")
+        return HttpResponseForbidden(
+            "You do not have permission to delete students."
+        )
 
     student = get_object_or_404(Student, pk=pk)
 
-    return render(request, "students/student_confirm_delete.html", {"student": student})
+    return render(
+        request,
+        "students/student_confirm_delete.html",
+        {"student": student},
+    )
 
 
 @login_required
 @require_POST
 def student_delete(request, pk):
     if not request.user.is_staff:
-        return HttpResponseForbidden("You do not have permission to delete students.")
+        return HttpResponseForbidden(
+            "You do not have permission to delete students."
+        )
 
     student = get_object_or_404(Student, pk=pk)
     student.delete()
     messages.success(request, "Student deleted successfully.")
 
     return redirect("student_list")
+
 
 @login_required
 def student_room(request, pk):
@@ -120,6 +147,73 @@ def student_room(request, pk):
     return render(
         request,
         "students/student_room.html",
+        {
+            "student": student,
+            "allocation": allocation,
+        },
+    )
+
+
+# HOSTEL-33: Student Account Association and Student Portal
+
+def get_linked_student(user):
+    """Return the student record linked to the authenticated account."""
+    return Student.objects.filter(user=user).first()
+
+
+@never_cache
+@login_required
+def student_portal(request):
+    student = get_linked_student(request.user)
+
+    if student is None:
+        return HttpResponseForbidden(
+            "No student record is associated with this account."
+        )
+
+    allocation = (
+        Allocation.objects
+        .filter(
+            student=student,
+            status=Allocation.Status.ACTIVE,
+        )
+        .select_related("room", "room__hostel")
+        .first()
+    )
+
+    return render(
+        request,
+        "students/portal.html",
+        {
+            "student": student,
+            "allocation": allocation,
+        },
+    )
+
+
+@never_cache
+@login_required
+def student_portal_room(request):
+    student = get_linked_student(request.user)
+
+    if student is None:
+        return HttpResponseForbidden(
+            "No student record is associated with this account."
+        )
+
+    allocation = (
+        Allocation.objects
+        .filter(
+            student=student,
+            status=Allocation.Status.ACTIVE,
+        )
+        .select_related("room", "room__hostel")
+        .first()
+    )
+
+    return render(
+        request,
+        "students/portal_room.html",
         {
             "student": student,
             "allocation": allocation,
