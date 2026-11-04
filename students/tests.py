@@ -863,3 +863,62 @@ class StudentPortalTests(TestCase):
         self.assertEqual(response.context["student"], self.student)
         self.assertContains(response, "Portal Test Student")
         self.assertNotContains(response, "Other Student")
+    # HOSTEL-34: Student Portal Dashboard and Profile Tests
+
+    def test_dashboard_displays_all_student_profile_fields(self):
+        self.client.force_login(self.student_user)
+
+        response = self.client.get(reverse("student_portal"))
+
+        self.assertEqual(response.status_code, 200)
+
+        expected_fields = [
+            "Portal Test Student",
+            "1AB23CS201",
+            "portal.student@example.com",
+            "9876543201",
+            "Computer Science",
+            "Year 2",
+        ]
+
+        for field in expected_fields:
+            with self.subTest(field=field):
+                self.assertContains(response, field)
+
+    def test_dashboard_contains_navigation_and_logout_form(self):
+        self.client.force_login(self.student_user)
+
+        response = self.client.get(reverse("student_portal"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            reverse("student_portal_room"),
+        )
+        self.assertContains(
+            response,
+            reverse("student_portal"),
+        )
+        self.assertContains(
+            response,
+            reverse("accounts:logout"),
+        )
+        self.assertContains(response, 'method="post"')
+        self.assertContains(response, "csrfmiddlewaretoken")
+
+    def test_room_page_contains_dashboard_navigation_and_logout(self):
+        self.client.force_login(self.student_user)
+
+        response = self.client.get(reverse("student_portal_room"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            reverse("student_portal"),
+        )
+        self.assertContains(
+            response,
+            reverse("accounts:logout"),
+        )
+        self.assertContains(response, 'method="post"')
+        self.assertContains(response, "csrfmiddlewaretoken")

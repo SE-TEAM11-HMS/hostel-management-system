@@ -1,29 +1,174 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Room Details</title>
+    <title>My Room | HostelHQ</title>
+    <link rel="stylesheet" href="{% static 'accounts/site.css' %}">
 </head>
-<body>
-    <h1>My Room Details</h1>
 
-    <p><strong>Student:</strong> {{ student.name }}</p>
-    <p><strong>USN:</strong> {{ student.usn }}</p>
+<body class="app-body">
+<div class="app-shell">
 
-    {% if allocation %}
-        <h2>Current Allocation</h2>
-        <p><strong>Hostel:</strong> {{ allocation.room.hostel.name }}</p>
-        <p><strong>Room Number:</strong> {{ allocation.room.room_number }}</p>
-        <p><strong>Capacity:</strong> {{ allocation.room.capacity }}</p>
-        <p><strong>Occupied:</strong> {{ allocation.room.occupied_count }}</p>
-        <p><strong>Available Beds:</strong> {{ allocation.room.available_beds }}</p>
-        <p><strong>Allocated At:</strong> {{ allocation.allocated_at }}</p>
-        <p><strong>Status:</strong> {{ allocation.status }}</p>
-    {% else %}
-        <p>No room allocated yet.</p>
-    {% endif %}
+    <aside class="sidebar">
+        <div class="brand">
+            <h2>HostelHQ</h2>
+        </div>
 
-    <a href="{% url 'student_portal' %}">Back to My Portal</a>
+        <p class="nav-caption">STUDENT MENU</p>
+
+        <nav class="sidebar-nav">
+            <a href="{% url 'student_portal' %}" class="nav-item">
+                Dashboard
+            </a>
+
+            <a href="{% url 'student_portal_room' %}" class="nav-item">
+                My Room
+            </a>
+        </nav>
+
+        <div class="sidebar-logout">
+            <form method="post" action="{% url 'accounts:logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="logout-button">
+                    Sign out
+                </button>
+            </form>
+        </div>
+    </aside>
+
+    <main class="app-main">
+
+        <header class="topbar">
+            <div>
+                <p class="eyebrow">STUDENT PORTAL</p>
+                <h1>My Room Details</h1>
+                <p class="topbar-subtitle">
+                    Your current hostel accommodation
+                </p>
+            </div>
+
+            <div class="topbar-right">
+                <span class="system-pill">Student Account</span>
+            </div>
+        </header>
+
+        <div class="page-container">
+            <div class="page-content">
+
+                <section class="welcome-banner">
+                    <div class="welcome-copy">
+                        <p class="banner-kicker">ACCOMMODATION DETAILS</p>
+                        <h2>Hello, {{ student.name }}!</h2>
+                        <p>
+                            View your current room allocation and
+                            occupancy information.
+                        </p>
+                    </div>
+                </section>
+
+                <section class="panel">
+                    <div class="panel-heading">
+                        <div>
+                            <p class="eyebrow">STUDENT INFORMATION</p>
+                            <h2>My Details</h2>
+                        </div>
+                    </div>
+
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <span class="detail-label">Student Name</span>
+                            <span class="detail-value">{{ student.name }}</span>
+                        </div>
+
+                        <div class="detail-item">
+                            <span class="detail-label">USN</span>
+                            <span class="detail-value">{{ student.usn }}</span>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="panel">
+                    <div class="panel-heading">
+                        <div>
+                            <p class="eyebrow">HOSTEL ACCOMMODATION</p>
+                            <h2>Current Room Allocation</h2>
+                        </div>
+                    </div>
+
+                    {% if allocation %}
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <span class="detail-label">Hostel Name</span>
+                                <span class="detail-value">
+                                    {{ allocation.room.hostel.name }}
+                                </span>
+                            </div>
+
+                            <div class="detail-item">
+                                <span class="detail-label">Room Number</span>
+                                <span class="detail-value">
+                                    {{ allocation.room.room_number }}
+                                </span>
+                            </div>
+
+                            <div class="detail-item">
+                                <span class="detail-label">Room Capacity</span>
+                                <span class="detail-value">
+                                    {{ allocation.room.capacity }}
+                                </span>
+                            </div>
+
+                            <div class="detail-item">
+                                <span class="detail-label">Occupied Beds</span>
+                                <span class="detail-value">
+                                    {{ allocation.room.occupied_count }}
+                                </span>
+                            </div>
+
+                            <div class="detail-item">
+                                <span class="detail-label">Available Beds</span>
+                                <span class="detail-value">
+                                    {{ allocation.room.available_beds }}
+                                </span>
+                            </div>
+
+                            <div class="detail-item">
+                                <span class="detail-label">Allocation Date</span>
+                                <span class="detail-value">
+                                    {{ allocation.allocated_at }}
+                                </span>
+                            </div>
+
+                            <div class="detail-item">
+                                <span class="detail-label">Allocation Status</span>
+                                <span class="detail-value">
+                                    {{ allocation.status }}
+                                </span>
+                            </div>
+                        </div>
+                    {% else %}
+                        <p>No room allocated yet.</p>
+                    {% endif %}
+                </section>
+
+                <div class="quick-actions">
+                    <a href="{% url 'student_portal' %}" class="action-card">
+                        <span class="action-link">
+                            ← Back to Dashboard
+                        </span>
+                    </a>
+                </div>
+
+            </div>
+        </div>
+
+        <footer class="app-footer">
+            HostelHQ Student Portal
+        </footer>
+
+    </main>
+</div>
 </body>
 </html>
