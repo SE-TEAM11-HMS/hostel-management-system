@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Portal</title>
+</head>
+<body>
+    <h1>Welcome, {{ student.name }}</h1>
+
+    <h2>My Student Details</h2>
+    <p><strong>USN:</strong> {{ student.usn }}</p>
+    <p><strong>Name:</strong> {{ student.name }}</p>
+    <p><strong>Email:</strong> {{ student.email }}</p>
+    <p><strong>Department:</strong> {{ student.department }}</p>
+    <p><strong>Academic Year:</strong> {{ student.academic_year }}</p>
+
+    <h2>My Hostel Details</h2>
+
+    {% if allocation %}
+        <p><strong>Hostel:</strong> {{ allocation.room.hostel.name }}</p>
+        <p><strong>Room:</strong> {{ allocation.room.room_number }}</p>
+        <p><strong>Allocation Status:</strong> {{ allocation.status }}</p>
+    {% else %}
+        <p>No room allocated yet.</p>
+    {% endif %}
+
+    <a href="{% url 'student_portal_room' %}">View My Room Details</a>
+</body>
+</html>
