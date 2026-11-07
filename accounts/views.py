@@ -1,3 +1,4 @@
+
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
@@ -6,7 +7,7 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_POST
 
-from .forms import AdminLoginForm
+from .forms import AdminLoginForm, StudentLoginForm
 from students.models import Student
 
 
@@ -51,6 +52,32 @@ def admin_login(request):
 
 
 @never_cache
+def student_login(request):
+    # Redirect an already-authenticated linked student.
+    if request.user.is_authenticated:
+        if (
+            not request.user.is_staff
+            and Student.objects.filter(user=request.user).count() == 1
+        ):
+            return redirect("student_portal")
+
+    form = StudentLoginForm(
+        request=request,
+        data=request.POST if request.method == "POST" else None,
+    )
+
+    if request.method == "POST" and form.is_valid():
+        login(request, form.get_user())
+        return redirect("student_portal")
+
+    return render(
+        request,
+        "accounts/student_login.html",
+        {"form": form},
+    )
+
+
+@never_cache
 @login_required
 def dashboard(request):
     # Enforce administrator access on the server.
@@ -60,12 +87,14 @@ def dashboard(request):
         )
 
     students = Student.objects.all().order_by("-pk")
+
     context = {
         "total_students": Student.objects.count(),
         "department_count": Student.objects.values("department").distinct().count(),
         "academic_year_count": Student.objects.values("academic_year").distinct().count(),
         "recent_students": students[:5],
     }
+
     return render(
         request,
         "accounts/dashboard.html",

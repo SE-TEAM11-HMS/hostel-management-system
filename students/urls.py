@@ -8,7 +8,6 @@ urlpatterns = [
     path("<int:pk>/edit/", views.student_update, name="student_update"),
     path("<int:pk>/delete/confirm/", views.student_confirm_delete, name="student_confirm_delete"),
     path("<int:pk>/delete/", views.student_delete, name="student_delete"),
-
     # HOSTEL-29: View current room allocation
     path("<int:pk>/room/", views.student_room, name="student_room"),
 ]
