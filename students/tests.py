@@ -789,7 +789,7 @@ class StudentPortalTests(TestCase):
         response = self.client.get(reverse("student_portal"))
 
         self.assertEqual(response.status_code, 302)
-        self.assertIn("/login/", response.url)
+        self.assertIn("/student-login/", response.url)
 
     def test_linked_student_can_access_own_room_page(self):
         self.client.force_login(self.student_user)
@@ -922,3 +922,78 @@ class StudentPortalTests(TestCase):
         )
         self.assertContains(response, 'method="post"')
         self.assertContains(response, "csrfmiddlewaretoken")
+
+    def test_student_can_login_and_access_own_portal(self):
+        login_response = self.client.post(
+            reverse("accounts:student_login"),
+            {
+                "username": "portal_student",
+                "password": "PortalPass!234",
+            },
+        )
+
+        self.assertRedirects(
+            login_response,
+            reverse("student_portal"),
+        )
+
+        portal_response = self.client.get(reverse("student_portal"))
+
+        self.assertEqual(portal_response.status_code, 200)
+        self.assertEqual(
+            portal_response.context["student"],
+            self.student,
+        )
+        self.assertContains(portal_response, "Portal Test Student")
+        self.assertNotContains(portal_response, "Other Student")
+    def test_student_with_active_allocation_can_view_actual_room_details(self):
+        hostel = Hostel.objects.create(
+            name="Room Details Hostel",
+            block="B",
+        )
+
+        room = Room.objects.create(
+            hostel=hostel,
+            room_number="205",
+            capacity=3,
+            occupied_count=1,
+        )
+
+        allocation = Allocation.objects.create(
+            student=self.student,
+            room=room,
+            status=Allocation.Status.ACTIVE,
+        )
+
+        self.client.force_login(self.student_user)
+
+        response = self.client.get(reverse("student_portal_room"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["student"], self.student)
+        self.assertEqual(response.context["allocation"], allocation)
+        self.assertContains(response, "Room Details Hostel")
+        self.assertContains(response, "205")
+
+    def test_student_post_logout_terminates_session(self):
+        self.client.force_login(self.student_user)
+
+        self.assertIn("_auth_user_id", self.client.session)
+
+        response = self.client.post(reverse("accounts:logout"))
+
+        self.assertRedirects(
+            response,
+            reverse("accounts:login"),
+        )
+
+        self.assertNotIn("_auth_user_id", self.client.session)
+
+        portal_response = self.client.get(reverse("student_portal"))
+
+        self.assertEqual(portal_response.status_code, 302)
+        self.assertTrue(
+            portal_response.url.startswith(
+                reverse("accounts:student_login")
+            )
+        )

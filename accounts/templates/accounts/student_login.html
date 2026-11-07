@@ -1,0 +1,100 @@
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#10213f">
+    <title>Student Login | HostelHQ</title>
+    <link rel="stylesheet" href="{% static 'accounts/site.css' %}">
+</head>
+<body class="login-page">
+    <main class="login-shell">
+        <section class="login-brand-panel" aria-label="HostelHQ introduction">
+            <a class="login-brand" href="{% url 'accounts:student_login' %}">
+                <span class="brand-mark" aria-hidden="true">H</span>
+                <span>
+                    <strong>Hostel<span style="color:#9fd1ff">HQ</span></strong>
+                    <small>HOSTEL MANAGEMENT SYSTEM</small>
+                </span>
+            </a>
+
+            <div class="login-hero">
+                <p class="login-kicker">TEAM 11 · STUDENT PORTAL</p>
+                <h1>Your hostel information, all in one place.</h1>
+                <p>Sign in securely to view your student profile, room allocation and hostel information.</p>
+
+                <div class="login-features">
+                    <div class="login-feature">
+                        <span aria-hidden="true">✓</span>
+                        Personal student dashboard
+                    </div>
+                    <div class="login-feature">
+                        <span aria-hidden="true">▤</span>
+                        Room allocation details
+                    </div>
+                    <div class="login-feature">
+                        <span aria-hidden="true">⌕</span>
+                        Hostel information
+                    </div>
+                </div>
+            </div>
+
+            <p class="login-foot">
+                Secure student access.<br>
+                Your records · Your room · Your hostel
+            </p>
+        </section>
+
+        <section class="login-form-panel" aria-labelledby="login-heading">
+            <div class="login-card">
+                <p class="login-overline">STUDENT ACCESS</p>
+                <h2 id="login-heading">Student Sign in</h2>
+                <p class="login-description">
+                    Use your registered student account credentials.
+                </p>
+
+                {% if form.non_field_errors %}
+                    <div class="login-error" role="alert" aria-live="polite">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+
+                <form method="post" class="login-form">
+                    {% csrf_token %}
+
+                    {% for field in form %}
+                        <div class="login-field">
+                            {{ field.label_tag }}
+                            {{ field }}
+                            {% for error in field.errors %}
+                                <p class="error" role="alert">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+
+                    <button class="login-submit" type="submit">
+                        Sign in to student portal
+                        <span aria-hidden="true">→</span>
+                    </button>
+                </form>
+
+                <div class="login-security-note">
+                    <span aria-hidden="true">◈</span>
+                    <span>
+                        This portal is restricted to authenticated student
+                        accounts linked to a student record.
+                    </span>
+                </div>
+
+                <p>
+                    <a href="{% url 'accounts:login' %}">
+                        Administrator login
+                    </a>
+                </p>
+            </div>
+        </section>
+    </main>
+</body>
+</html>
