@@ -863,7 +863,7 @@ class StudentPortalTests(TestCase):
         self.assertEqual(response.context["student"], self.student)
         self.assertContains(response, "Portal Test Student")
         self.assertNotContains(response, "Other Student")
-    # HOSTEL-34: Student Portal Dashboard and Profile Tests
+       # HOSTEL-34: Student Portal Dashboard and Profile Tests
 
     def test_dashboard_displays_all_student_profile_fields(self):
         self.client.force_login(self.student_user)
@@ -946,6 +946,7 @@ class StudentPortalTests(TestCase):
         )
         self.assertContains(portal_response, "Portal Test Student")
         self.assertNotContains(portal_response, "Other Student")
+
     def test_student_with_active_allocation_can_view_actual_room_details(self):
         hostel = Hostel.objects.create(
             name="Room Details Hostel",
@@ -966,7 +967,6 @@ class StudentPortalTests(TestCase):
         )
 
         self.client.force_login(self.student_user)
-
         response = self.client.get(reverse("student_portal_room"))
 
         self.assertEqual(response.status_code, 200)
@@ -974,6 +974,55 @@ class StudentPortalTests(TestCase):
         self.assertEqual(response.context["allocation"], allocation)
         self.assertContains(response, "Room Details Hostel")
         self.assertContains(response, "205")
+        self.assertContains(response, "Hostel Block")
+        self.assertContains(response, "B")
+
+    def test_student_room_page_does_not_show_another_students_hostel(self):
+        own_hostel = Hostel.objects.create(
+            name="Own Student Hostel",
+            block="A",
+        )
+
+        own_room = Room.objects.create(
+            hostel=own_hostel,
+            room_number="101",
+            capacity=2,
+            occupied_count=1,
+        )
+
+        Allocation.objects.create(
+            student=self.student,
+            room=own_room,
+            status=Allocation.Status.ACTIVE,
+        )
+
+        other_hostel = Hostel.objects.create(
+            name="Other Student Hostel",
+            block="Z",
+        )
+
+        other_room = Room.objects.create(
+            hostel=other_hostel,
+            room_number="999",
+            capacity=2,
+            occupied_count=1,
+        )
+
+        Allocation.objects.create(
+            student=self.other_student,
+            room=other_room,
+            status=Allocation.Status.ACTIVE,
+        )
+
+        self.client.force_login(self.student_user)
+        response = self.client.get(reverse("student_portal_room"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Own Student Hostel")
+        self.assertContains(response, "101")
+        self.assertContains(response, "A")
+        self.assertNotContains(response, "Other Student Hostel")
+        self.assertNotContains(response, "999")
 
     def test_student_post_logout_terminates_session(self):
         self.client.force_login(self.student_user)
