@@ -188,6 +188,7 @@ class HostelRoomManagementTests(TestCase):
             ).exists()
         )
 
+
     def test_non_admin_cannot_add_room(self):
         self.client.login(
             username="student",
@@ -207,6 +208,72 @@ class HostelRoomManagementTests(TestCase):
         self.assertFalse(
             Room.objects.filter(room_number="103").exists()
         )
+
+    # HOSTEL-37: Room editing access control
+
+    def test_admin_can_edit_room(self):
+        room = Room.objects.create(
+            hostel=self.hostel,
+            room_number="105",
+            capacity=4,
+        )
+
+        self.client.login(
+            username="admin",
+            password="Admin@123",
+        )
+
+        response = self.client.get(
+            reverse("rooms:room_edit", args=[room.id])
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_non_admin_cannot_access_edit_room(self):
+        room = Room.objects.create(
+            hostel=self.hostel,
+            room_number="106",
+            capacity=4,
+        )
+
+        self.client.login(
+            username="student",
+            password="Student@123",
+        )
+
+        response = self.client.get(
+            reverse("rooms:room_edit", args=[room.id])
+        )
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_non_admin_cannot_edit_room_using_post(self):
+        room = Room.objects.create(
+            hostel=self.hostel,
+            room_number="107",
+            capacity=4,
+        )
+
+        self.client.login(
+            username="student",
+            password="Student@123",
+        )
+
+        response = self.client.post(
+            reverse("rooms:room_edit", args=[room.id]),
+            {
+                "hostel": self.hostel.id,
+                "room_number": "108",
+                "capacity": 6,
+            },
+        )
+
+        self.assertEqual(response.status_code, 403)
+
+        room.refresh_from_db()
+
+        self.assertEqual(room.room_number, "107")
+        self.assertEqual(room.capacity, 4)
 
     def test_available_beds_calculation(self):
         room = Room.objects.create(
@@ -352,11 +419,9 @@ class RoomAvailabilityAndDetailsTests(TestCase):
         self.assertContains(response, "4")
         self.assertContains(response, "2")
 
-        # Explicitly verify available beds in rendered HTML.
         self.assertContains(response, "Available Beds")
         self.assertContains(response, "<td>2</td>", html=True)
 
-        # Verify the model calculation too.
         self.assertEqual(self.partial_room.available_beds, 2)
 
     def test_non_admin_cannot_view_available_rooms(self):
