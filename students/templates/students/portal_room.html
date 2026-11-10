@@ -1,3 +1,4 @@
+
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
@@ -68,6 +69,7 @@
                     </div>
                 </section>
 
+                <!-- Student Information -->
                 <section class="panel">
                     <div class="panel-heading">
                         <div>
@@ -79,16 +81,21 @@
                     <div class="detail-grid">
                         <div class="detail-item">
                             <span class="detail-label">Student Name</span>
-                            <span class="detail-value">{{ student.name }}</span>
+                            <span class="detail-value">
+                                {{ student.name }}
+                            </span>
                         </div>
 
                         <div class="detail-item">
                             <span class="detail-label">USN</span>
-                            <span class="detail-value">{{ student.usn }}</span>
+                            <span class="detail-value">
+                                {{ student.usn }}
+                            </span>
                         </div>
                     </div>
                 </section>
 
+                <!-- Hostel Information -->
                 <section class="panel">
                     <div class="panel-heading">
                         <div>
@@ -99,10 +106,18 @@
 
                     {% if allocation %}
                         <div class="detail-grid">
+
                             <div class="detail-item">
                                 <span class="detail-label">Hostel Name</span>
                                 <span class="detail-value">
                                     {{ allocation.room.hostel.name }}
+                                </span>
+                            </div>
+
+                            <div class="detail-item">
+                                <span class="detail-label">Hostel Block</span>
+                                <span class="detail-value">
+                                    {{ allocation.room.hostel.block }}
                                 </span>
                             </div>
 
@@ -147,7 +162,9 @@
                                     {{ allocation.status }}
                                 </span>
                             </div>
+
                         </div>
+
                     {% else %}
                         <p>No room allocated yet.</p>
                     {% endif %}
