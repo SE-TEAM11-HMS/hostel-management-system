@@ -863,6 +863,65 @@ class StudentPortalTests(TestCase):
         self.assertEqual(response.context["student"], self.student)
         self.assertContains(response, "Portal Test Student")
         self.assertNotContains(response, "Other Student")
+    # HOSTEL-34: Student Portal Dashboard and Profile Tests
+
+    def test_dashboard_displays_all_student_profile_fields(self):
+        self.client.force_login(self.student_user)
+
+        response = self.client.get(reverse("student_portal"))
+
+        self.assertEqual(response.status_code, 200)
+
+        expected_fields = [
+            "Portal Test Student",
+            "1AB23CS201",
+            "portal.student@example.com",
+            "9876543201",
+            "Computer Science",
+            "Year 2",
+        ]
+
+        for field in expected_fields:
+            with self.subTest(field=field):
+                self.assertContains(response, field)
+
+    def test_dashboard_contains_navigation_and_logout_form(self):
+        self.client.force_login(self.student_user)
+
+        response = self.client.get(reverse("student_portal"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            reverse("student_portal_room"),
+        )
+        self.assertContains(
+            response,
+            reverse("student_portal"),
+        )
+        self.assertContains(
+            response,
+            reverse("accounts:logout"),
+        )
+        self.assertContains(response, 'method="post"')
+        self.assertContains(response, "csrfmiddlewaretoken")
+
+    def test_room_page_contains_dashboard_navigation_and_logout(self):
+        self.client.force_login(self.student_user)
+
+        response = self.client.get(reverse("student_portal_room"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            reverse("student_portal"),
+        )
+        self.assertContains(
+            response,
+            reverse("accounts:logout"),
+        )
+        self.assertContains(response, 'method="post"')
+        self.assertContains(response, "csrfmiddlewaretoken")
 
     def test_student_can_login_and_access_own_portal(self):
         login_response = self.client.post(
@@ -887,3 +946,54 @@ class StudentPortalTests(TestCase):
         )
         self.assertContains(portal_response, "Portal Test Student")
         self.assertNotContains(portal_response, "Other Student")
+    def test_student_with_active_allocation_can_view_actual_room_details(self):
+        hostel = Hostel.objects.create(
+            name="Room Details Hostel",
+            block="B",
+        )
+
+        room = Room.objects.create(
+            hostel=hostel,
+            room_number="205",
+            capacity=3,
+            occupied_count=1,
+        )
+
+        allocation = Allocation.objects.create(
+            student=self.student,
+            room=room,
+            status=Allocation.Status.ACTIVE,
+        )
+
+        self.client.force_login(self.student_user)
+
+        response = self.client.get(reverse("student_portal_room"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["student"], self.student)
+        self.assertEqual(response.context["allocation"], allocation)
+        self.assertContains(response, "Room Details Hostel")
+        self.assertContains(response, "205")
+
+    def test_student_post_logout_terminates_session(self):
+        self.client.force_login(self.student_user)
+
+        self.assertIn("_auth_user_id", self.client.session)
+
+        response = self.client.post(reverse("accounts:logout"))
+
+        self.assertRedirects(
+            response,
+            reverse("accounts:login"),
+        )
+
+        self.assertNotIn("_auth_user_id", self.client.session)
+
+        portal_response = self.client.get(reverse("student_portal"))
+
+        self.assertEqual(portal_response.status_code, 302)
+        self.assertTrue(
+            portal_response.url.startswith(
+                reverse("accounts:student_login")
+            )
+        )
