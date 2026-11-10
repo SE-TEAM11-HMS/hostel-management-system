@@ -14,6 +14,9 @@ urlpatterns = [
     # Django Admin
     path("admin/", admin.site.urls),
 
+    # HOSTEL-33: Student Portal
+    path("", include("students.portal_urls")),
+
     # Student management
     path("students/", include("students.urls")),
 

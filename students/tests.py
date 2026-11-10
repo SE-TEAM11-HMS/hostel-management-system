@@ -1,10 +1,11 @@
-from allocations.models import Allocation
-from rooms.models import Hostel, Room
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
+from allocations.models import Allocation
+from rooms.models import Hostel, Room
 from .forms import StudentForm
 from .models import Student
 
@@ -721,3 +722,168 @@ class StudentRoomViewTest(TestCase):
         response = self.client.get(self.url)
 
         self.assertEqual(response.status_code, 302)
+
+
+# HOSTEL-33: Student Account Association and Portal Tests
+
+class StudentPortalTests(TestCase):
+
+    def setUp(self):
+        User = get_user_model()
+
+        self.student_user = User.objects.create_user(
+            username="portal_student",
+            password="PortalPass!234",
+            is_staff=False,
+        )
+
+        self.unlinked_user = User.objects.create_user(
+            username="unlinked_student",
+            password="PortalPass!234",
+            is_staff=False,
+        )
+
+        self.admin = User.objects.create_user(
+            username="portal_admin",
+            password="PortalPass!234",
+            is_staff=True,
+        )
+
+        self.student = Student.objects.create(
+            usn="1AB23CS201",
+            name="Portal Test Student",
+            email="portal.student@example.com",
+            phone="9876543201",
+            department="Computer Science",
+            academic_year=2,
+            user=self.student_user,
+        )
+
+        self.other_student = Student.objects.create(
+            usn="1AB23CS202",
+            name="Other Student",
+            email="other.portal@example.com",
+            phone="9876543202",
+            department="Computer Science",
+            academic_year=2,
+        )
+
+    def test_linked_student_can_access_own_portal(self):
+        self.client.force_login(self.student_user)
+
+        response = self.client.get(reverse("student_portal"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["student"], self.student)
+        self.assertContains(response, "Portal Test Student")
+        self.assertNotContains(response, "Other Student")
+
+    def test_unlinked_account_receives_forbidden_response(self):
+        self.client.force_login(self.unlinked_user)
+
+        response = self.client.get(reverse("student_portal"))
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_anonymous_user_is_redirected_to_login(self):
+        response = self.client.get(reverse("student_portal"))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("/student-login/", response.url)
+
+    def test_linked_student_can_access_own_room_page(self):
+        self.client.force_login(self.student_user)
+
+        response = self.client.get(reverse("student_portal_room"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["student"], self.student)
+        self.assertIsNone(response.context["allocation"])
+        self.assertContains(response, "No room allocated yet.")
+
+    def test_unlinked_account_cannot_access_room_page(self):
+        self.client.force_login(self.unlinked_user)
+
+        response = self.client.get(reverse("student_portal_room"))
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_student_account_cannot_access_admin_dashboard(self):
+        self.client.force_login(self.student_user)
+
+        response = self.client.get(reverse("accounts:dashboard"))
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_admin_dashboard_access_remains_unchanged(self):
+        self.client.force_login(self.admin)
+
+        response = self.client.get(reverse("accounts:dashboard"))
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_linked_student_can_see_own_active_allocation(self):
+        hostel = Hostel.objects.create(
+            name="Test Hostel",
+            block="A",
+        )
+
+        room = Room.objects.create(
+            hostel=hostel,
+            room_number="101",
+            capacity=3,
+            occupied_count=1,
+        )
+
+        allocation = Allocation.objects.create(
+            student=self.student,
+            room=room,
+            status=Allocation.Status.ACTIVE,
+        )
+
+        self.client.force_login(self.student_user)
+
+        response = self.client.get(reverse("student_portal"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["allocation"], allocation)
+        self.assertContains(response, "Test Hostel")
+        self.assertContains(response, "101")
+        self.assertContains(response, "ACTIVE")
+
+    def test_student_cannot_access_another_students_record_using_query_parameter(self):
+        self.client.force_login(self.student_user)
+
+        response = self.client.get(
+            reverse("student_portal"),
+            {"student_id": self.other_student.pk},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["student"], self.student)
+        self.assertContains(response, "Portal Test Student")
+        self.assertNotContains(response, "Other Student")
+
+    def test_student_can_login_and_access_own_portal(self):
+        login_response = self.client.post(
+            reverse("accounts:student_login"),
+            {
+                "username": "portal_student",
+                "password": "PortalPass!234",
+            },
+        )
+
+        self.assertRedirects(
+            login_response,
+            reverse("student_portal"),
+        )
+
+        portal_response = self.client.get(reverse("student_portal"))
+
+        self.assertEqual(portal_response.status_code, 200)
+        self.assertEqual(
+            portal_response.context["student"],
+            self.student,
+        )
+        self.assertContains(portal_response, "Portal Test Student")
+        self.assertNotContains(portal_response, "Other Student")
