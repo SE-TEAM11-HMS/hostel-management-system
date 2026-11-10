@@ -1,4 +1,3 @@
-
 """
 Django settings for hostel_project project.
 
@@ -16,6 +15,23 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
 
 
+def env_flag(name, default=False):
+    """Read a boolean environment variable and reject ambiguous values."""
+    value = os.getenv(name)
+    if value is None:
+        return default
+
+    normalized = value.strip().lower()
+    if normalized in {"1", "true", "yes", "on"}:
+        return True
+    if normalized in {"0", "false", "no", "off"}:
+        return False
+
+    raise ImproperlyConfigured(
+        f"{name} must be set to a boolean value."
+    )
+
+
 # Security settings
 SECRET_KEY = os.getenv("SECRET_KEY")
 if not SECRET_KEY:
@@ -23,7 +39,7 @@ if not SECRET_KEY:
         "SECRET_KEY must be configured in the .env file."
     )
 
-DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "yes")
+DEBUG = env_flag("DEBUG", False)
 
 ALLOWED_HOSTS = [
     host.strip()
@@ -32,6 +48,42 @@ ALLOWED_HOSTS = [
     ).split(",")
     if host.strip()
 ]
+
+# HTTPS is deployment-specific. Keep redirects and HSTS explicitly
+# configurable so local HTTP development is not locked out.
+SECURE_SSL_REDIRECT = env_flag("SECURE_SSL_REDIRECT", False)
+SESSION_COOKIE_SECURE = env_flag(
+    "SESSION_COOKIE_SECURE", not DEBUG
+)
+CSRF_COOKIE_SECURE = env_flag(
+    "CSRF_COOKIE_SECURE", not DEBUG
+)
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_HTTPONLY = True
+CSRF_COOKIE_SAMESITE = "Lax"
+
+try:
+    SECURE_HSTS_SECONDS = int(
+        os.getenv("SECURE_HSTS_SECONDS", "0")
+    )
+except ValueError as error:
+    raise ImproperlyConfigured(
+        "SECURE_HSTS_SECONDS must be a non-negative integer."
+    ) from error
+
+if SECURE_HSTS_SECONDS < 0:
+    raise ImproperlyConfigured(
+        "SECURE_HSTS_SECONDS must be a non-negative integer."
+    )
+
+SECURE_HSTS_INCLUDE_SUBDOMAINS = env_flag(
+    "SECURE_HSTS_INCLUDE_SUBDOMAINS", False
+)
+SECURE_HSTS_PRELOAD = env_flag("SECURE_HSTS_PRELOAD", False)
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_REFERRER_POLICY = "same-origin"
+X_FRAME_OPTIONS = "DENY"
 
 
 # Application definition
