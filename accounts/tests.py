@@ -1,9 +1,56 @@
+from unittest.mock import patch
+
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.core.exceptions import ImproperlyConfigured
+from django.test import SimpleTestCase, TestCase
 from django.urls import reverse
+
+from hostel_project.settings import env_flag
 
 
 User = get_user_model()
+
+
+class SecurityConfigurationTests(SimpleTestCase):
+
+    def test_security_headers_are_present_on_login_page(self):
+        response = self.client.get(reverse("accounts:login"))
+
+        self.assertEqual(
+            response.headers["X-Content-Type-Options"],
+            "nosniff",
+        )
+        self.assertEqual(
+            response.headers["X-Frame-Options"],
+            "DENY",
+        )
+        self.assertEqual(
+            response.headers["Referrer-Policy"],
+            "same-origin",
+        )
+
+    def test_environment_flag_accepts_explicit_boolean_values(self):
+        for value, expected in (
+            ("true", True),
+            ("YES", True),
+            ("1", True),
+            ("false", False),
+            ("OFF", False),
+            ("0", False),
+        ):
+            with self.subTest(value=value), patch.dict(
+                "os.environ",
+                {"HOSTEL_TEST_FLAG": value},
+            ):
+                self.assertIs(
+                    env_flag("HOSTEL_TEST_FLAG", default=True),
+                    expected,
+                )
+
+    def test_environment_flag_rejects_ambiguous_values(self):
+        with patch.dict("os.environ", {"HOSTEL_TEST_FLAG": "sometimes"}):
+            with self.assertRaises(ImproperlyConfigured):
+                env_flag("HOSTEL_TEST_FLAG")
 
 
 class AdminAuthenticationTests(TestCase):
