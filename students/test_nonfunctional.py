@@ -45,9 +45,9 @@ class NonFunctionalPerformanceTests(TestCase):
 
     def test_primary_interfaces_render_with_clear_headings(self):
         pages = (
-            (reverse("accounts:dashboard"), "Dashboard"),
-            (reverse("student_list"), "Student Directory"),
-            (reverse("rooms:room_list"), "Hostel Room Management"),
+            (reverse("accounts:dashboard"), "Administrator dashboard"),
+            (reverse("student_list"), "Student directory"),
+            (reverse("rooms:room_list"), "Hostels and rooms"),
             (reverse("allocations:allocate_room"), "Allocate Room to Student"),
         )
 
