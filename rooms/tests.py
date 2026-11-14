@@ -27,10 +27,7 @@ class HostelRoomManagementTests(TestCase):
         )
 
     def test_admin_can_access_room_list(self):
-        self.client.login(
-            username="admin",
-            password="Admin@123",
-        )
+        self.client.force_login(self.admin)
 
         response = self.client.get(
             reverse("rooms:room_list")
@@ -39,10 +36,7 @@ class HostelRoomManagementTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_non_admin_cannot_access_room_list(self):
-        self.client.login(
-            username="student",
-            password="Student@123",
-        )
+        self.client.force_login(self.student)
 
         response = self.client.get(
             reverse("rooms:room_list")
@@ -51,10 +45,7 @@ class HostelRoomManagementTests(TestCase):
         self.assertEqual(response.status_code, 403)
 
     def test_admin_can_add_hostel(self):
-        self.client.login(
-            username="admin",
-            password="Admin@123",
-        )
+        self.client.force_login(self.admin)
 
         response = self.client.post(
             reverse("rooms:hostel_add"),
@@ -70,10 +61,7 @@ class HostelRoomManagementTests(TestCase):
         )
 
     def test_duplicate_hostel_is_rejected(self):
-        self.client.login(
-            username="admin",
-            password="Admin@123",
-        )
+        self.client.force_login(self.admin)
 
         response = self.client.post(
             reverse("rooms:hostel_add"),
@@ -90,10 +78,7 @@ class HostelRoomManagementTests(TestCase):
         )
 
     def test_non_admin_cannot_add_hostel(self):
-        self.client.login(
-            username="student",
-            password="Student@123",
-        )
+        self.client.force_login(self.student)
 
         response = self.client.post(
             reverse("rooms:hostel_add"),
@@ -111,10 +96,7 @@ class HostelRoomManagementTests(TestCase):
         )
 
     def test_admin_can_add_room(self):
-        self.client.login(
-            username="admin",
-            password="Admin@123",
-        )
+        self.client.force_login(self.admin)
 
         response = self.client.post(
             reverse("rooms:room_add"),
@@ -142,10 +124,7 @@ class HostelRoomManagementTests(TestCase):
             capacity=4,
         )
 
-        self.client.login(
-            username="admin",
-            password="Admin@123",
-        )
+        self.client.force_login(self.admin)
 
         response = self.client.post(
             reverse("rooms:room_add"),
@@ -166,10 +145,7 @@ class HostelRoomManagementTests(TestCase):
         )
 
     def test_zero_room_capacity_is_rejected(self):
-        self.client.login(
-            username="admin",
-            password="Admin@123",
-        )
+        self.client.force_login(self.admin)
 
         response = self.client.post(
             reverse("rooms:room_add"),
@@ -190,10 +166,7 @@ class HostelRoomManagementTests(TestCase):
 
 
     def test_non_admin_cannot_add_room(self):
-        self.client.login(
-            username="student",
-            password="Student@123",
-        )
+        self.client.force_login(self.student)
 
         response = self.client.post(
             reverse("rooms:room_add"),
@@ -218,10 +191,7 @@ class HostelRoomManagementTests(TestCase):
             capacity=4,
         )
 
-        self.client.login(
-            username="admin",
-            password="Admin@123",
-        )
+        self.client.force_login(self.admin)
 
         response = self.client.get(
             reverse("rooms:room_edit", args=[room.id])
@@ -236,10 +206,7 @@ class HostelRoomManagementTests(TestCase):
             capacity=4,
         )
 
-        self.client.login(
-            username="student",
-            password="Student@123",
-        )
+        self.client.force_login(self.student)
 
         response = self.client.get(
             reverse("rooms:room_edit", args=[room.id])
@@ -254,10 +221,7 @@ class HostelRoomManagementTests(TestCase):
             capacity=4,
         )
 
-        self.client.login(
-            username="student",
-            password="Student@123",
-        )
+        self.client.force_login(self.student)
 
         response = self.client.post(
             reverse("rooms:room_edit", args=[room.id]),
