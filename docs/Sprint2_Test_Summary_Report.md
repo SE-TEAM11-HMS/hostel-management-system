@@ -2,27 +2,27 @@
 
 ## Purpose
 
-This report consolidates the repository-based test evidence produced for Sprint 2. Its final acceptance-test figures are completed by HOSTEL-43 after the fresh CI run.
+This report consolidates repository-based Sprint 2 test evidence.
 
 ## Test activities included
 
-| Activity | Evidence artifact | Current outcome |
+| Activity | Evidence artifact | Outcome |
 | --- | --- | --- |
 | Security hardening | `docs/HOSTEL-38-security-review.md` | Automated evidence recorded |
-| Security test execution | `docs/HOSTEL-39-security-test-report.md` | Automated evidence recorded |
-| Room and allocation functional tests | `docs/HOSTEL-40-functional-test-report.md` | Automated evidence recorded |
-| MySQL integration | `docs/HOSTEL-41-mysql-integration-report.md` | Automated evidence recorded |
-| Non-functional tests | `docs/HOSTEL-42-non-functional-test-report.md` | Automated evidence recorded with stated limits |
-| Acceptance tests | `docs/HOSTEL-43-acceptance-test-report.md` | Pending HOSTEL-43 CI execution |
+| Security testing | `docs/HOSTEL-39-security-test-report.md` | Passed |
+| Functional room/allocation testing | `docs/HOSTEL-40-functional-test-report.md` | Passed |
+| MySQL integration | `docs/HOSTEL-41-mysql-integration-report.md` | Passed |
+| Non-functional testing | `docs/HOSTEL-42-non-functional-test-report.md` | Passed or assessed with stated limits |
+| Acceptance testing | `docs/HOSTEL-43-acceptance-test-report.md` | AT-001 through AT-016 passed |
 
-## Test environment
+## Execution evidence
 
-GitHub Actions runs Django configuration checks, applies migrations, and executes the automated test suite against MySQL 8.0. This validates the integrated application code and database behaviour in CI.
+GitHub Actions [run #280](https://github.com/SE-TEAM11-HMS/hostel-management-system/actions/runs/43623547770) passed Django configuration checks, MySQL migrations and the full automated suite. The acceptance RTM records Passed status for all 16 acceptance tests.
 
 ## Defect status
 
-No unresolved defect is recorded by the completed repository-based test activities. Any failure found by the HOSTEL-43 CI run will be recorded in its acceptance report and retested after correction.
+No unresolved defect was identified by the repository-based Sprint 2 test activities.
 
 ## Exit-criteria interpretation
 
-The HOSTEL-43 report and acceptance RTM provide the evidence for AT-001 through AT-016. Passing repository CI does not replace production deployment validation, network performance testing, or stakeholder acceptance sign-off.
+The documented results provide automated acceptance evidence for the integrated MySQL CI build. Production deployment validation, sustained availability monitoring, external network performance testing and stakeholder sign-off remain separate release activities.
