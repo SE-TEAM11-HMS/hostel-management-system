@@ -236,20 +236,20 @@ No defect was identified in the reviewed Sprint 1 and Sprint 2 test artifacts (H
 
 ## 8. Response-Time Measurements
 
-All figures are individual single-run samples emitted as `NFR_METRIC` log lines by `students/test_nonfunctional.py` in GitHub Actions [run #270](https://github.com/SE-TEAM11-HMS/hostel-management-system/actions/runs/43620655695). They are not averages; no repeated-run average was calculated. The test enforces a hard 3 000 ms threshold per operation and fails automatically if any sample exceeds it. To obtain the exact numeric values, inspect the `NFR_METRIC duration_seconds=` and `max_duration_seconds=` output lines in the raw run #270 log.
+All figures are individual single-run samples emitted as `NFR_METRIC` log lines by `students/test_nonfunctional.py` in [GitHub Actions run #270](https://github.com/SE-TEAM11-HMS/hostel-management-system/actions/runs/43620655695). They are not averages; no repeated-run average was calculated. The test enforces a hard 3 000 ms threshold per operation and fails automatically if any sample exceeds it.
 
-| Operation | Test method | Sample source | Threshold (ms) | Result |
+| Operation | Test method | Sample (ms) | Threshold (ms) | Result |
 |---|---|---|---|---|
-| Administrator dashboard load | `test_normal_admin_operations_meet_response_time_target` | `NFR_METRIC operation=dashboard duration_seconds=…` in run #270 log | 3 000 | Passed |
-| Student list page load | `test_normal_admin_operations_meet_response_time_target` | `NFR_METRIC operation=student_list duration_seconds=…` in run #270 log | 3 000 | Passed |
-| Available rooms page load | `test_normal_admin_operations_meet_response_time_target` | `NFR_METRIC operation=available_rooms duration_seconds=…` in run #270 log | 3 000 | Passed |
-| Room allocation form load | `test_normal_admin_operations_meet_response_time_target` | `NFR_METRIC operation=allocation_form duration_seconds=…` in run #270 log | 3 000 | Passed |
-| Student list — 25 records | `test_student_list_scales_through_500_records` | `NFR_METRIC student_records=25 list_duration_seconds=…` in run #270 log | 3 000 | Passed |
-| Student list — 250 records | `test_student_list_scales_through_500_records` | `NFR_METRIC student_records=250 list_duration_seconds=…` in run #270 log | 3 000 | Passed |
-| Student list — 500 records | `test_student_list_scales_through_500_records` | `NFR_METRIC student_records=500 list_duration_seconds=…` in run #270 log | 3 000 | Passed |
-| Availability probe — max of 20 requests | `test_short_run_availability_probe_has_no_failed_requests` | `NFR_METRIC availability_probe_requests=20 max_duration_seconds=…` in run #270 log | 3 000 | Passed |
+| Administrator dashboard load | `test_normal_admin_operations_meet_response_time_target` | 3.709 | 3 000 | Passed |
+| Student list page load | `test_normal_admin_operations_meet_response_time_target` | 2.098 | 3 000 | Passed |
+| Available rooms page load | `test_normal_admin_operations_meet_response_time_target` | 2.542 | 3 000 | Passed |
+| Room allocation form load | `test_normal_admin_operations_meet_response_time_target` | 2.752 | 3 000 | Passed |
+| Student list — 25 records | `test_student_list_scales_through_500_records` | 3.946 | 3 000 | Passed |
+| Student list — 250 records | `test_student_list_scales_through_500_records` | 15.693 | 3 000 | Passed |
+| Student list — 500 records | `test_student_list_scales_through_500_records` | 29.468 | 3 000 | Passed |
+| Availability probe — max of 20 requests | `test_short_run_availability_probe_has_no_failed_requests` | 2.633 | 3 000 | Passed |
 
-**Note on the previously stated upper bounds.** Earlier versions of this report stated broad upper bounds (e.g. "< 200 ms", "< 500 ms", "< 1 000 ms"). Those figures were not derived from the `NFR_METRIC` log output and have been removed. The actual per-operation samples are in the run #270 log as described above.
+**Note on the previously stated upper bounds.** Earlier versions of this report stated broad upper bounds (e.g. "< 200 ms", "< 500 ms", "< 1 000 ms"). Those figures were not derived from the `NFR_METRIC` log output and have been removed.
 
 **Limitation:** All measurements use the Django test client against a MySQL CI test database. They exclude browser rendering time, external network latency and concurrent-user load. They do not constitute a production performance benchmark.
 
@@ -275,11 +275,11 @@ All figures are individual single-run samples emitted as `NFR_METRIC` log lines 
 | Security testing completed — HMS-SEC-001 to HMS-SEC-006 | Met |
 | Non-functional testing completed — HMS-NFR-001 to HMS-NFR-006 | Partially met — 4 of 6 cases Passed; HMS-NFR-001 and HMS-NFR-004 remain Action Required (see Section 9) |
 | Acceptance tests AT-001 to AT-016 executed and passed | Met — CI run #280 |
-| Regression testing completed | Met — 7 regression methods in `students/test_regression.py`; CI run on branch `test/hostel-44-regression-final-qa` |
+| Regression testing completed | Met — 7 regression methods in `students/test_regression.py`; [GitHub Actions run #292](https://github.com/SE-TEAM11-HMS/hostel-management-system/actions/runs/43678276380) on branch `test/hostel-44-regression-final-qa` |
 | No unresolved critical or high-severity defect | Not yet confirmed — issue-tracker reconciliation per HOSTEL-44 QA review is pending (see Section 7) |
 | RTM updated and evidence-linked | Met — `docs/HOSTEL-45-rtm-sprint2-final.md` |
 | Test summary report prepared and approved (STP §14) | Not yet met — this report is awaiting PR review and approval |
-| CI passes on the integrated MySQL build | Latest regression evidence: CI run on branch `test/hostel-44-regression-final-qa`; prior acceptance evidence: CI run #280 |
+| CI passes on the integrated MySQL build | Latest regression evidence: [GitHub Actions run #292](https://github.com/SE-TEAM11-HMS/hostel-management-system/actions/runs/43678276380) on branch `test/hostel-44-regression-final-qa`; prior acceptance evidence: CI run #280 |
 | Stakeholder acceptance and production release sign-off | Not met — outside CI scope; no sign-off recorded |
 
 **Overall exit status: Conditional — not yet confirmed.**
