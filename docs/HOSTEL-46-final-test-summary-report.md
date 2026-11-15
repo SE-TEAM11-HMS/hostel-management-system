@@ -148,10 +148,10 @@ CI evidence: [GitHub Actions run #40696524346](https://github.com/SE-TEAM11-HMS/
 
 | Test | Requirement | Result |
 |---|---|---|
-| AT-001 — Administrator login | HMS-SEC-001 | Passed |
-| AT-002 — Invalid credential rejection | HMS-SEC-002 | Passed |
+| AT-001 — Administrator login | HMS-F-001; HMS-SEC-001 | Passed |
+| AT-002 — Invalid credential rejection | HMS-F-002; HMS-SEC-002 | Passed |
 | AT-003 — Student record creation | HMS-F-003 | Passed |
-| AT-004 — Student search | HMS-F-015 | Passed |
+| AT-004 — Student search | HMS-F-004; HMS-F-015 | Passed |
 | AT-005 — Student record update | HMS-F-005 | Passed |
 | AT-006 — Hostel and room creation | HMS-F-007 | Passed |
 | AT-007 — Available room listing | HMS-F-008 | Passed |
@@ -159,8 +159,8 @@ CI evidence: [GitHub Actions run #40696524346](https://github.com/SE-TEAM11-HMS/
 | AT-009 — Full-room rejection | HMS-F-011 | Passed |
 | AT-010 — Student allocated room view | HMS-F-012 | Passed |
 | AT-011 — Room change | HMS-F-013 | Passed |
-| AT-012 — Room vacation | HMS-F-014 | Passed |
-| AT-013 — Unauthorized access denied | HMS-SEC-003 | Passed |
+| AT-012 — Room vacation | HMS-F-014; HMS-F-016 | Passed |
+| AT-013 — Unauthorized access denied | HMS-SEC-001; HMS-SEC-003 | Passed |
 | AT-014 — Response time target | HMS-NFR-002 | Passed |
 | AT-015 — Student update consistency | HMS-NFR-003 | Passed |
 | AT-016 — Logout and session termination | HMS-SEC-005 | Passed |
@@ -188,16 +188,18 @@ CI evidence: [GitHub Actions run #40696524346](https://github.com/SE-TEAM11-HMS/
 
 ## 5. Consolidated Test Execution Metrics
 
-| Activity | Planned | Executed | Passed | Failed | Blocked |
-|---|---|---|---|---|---|
-| Sprint 1 — unit, integration, security | 61 | 61 | 61 | 0 | 0 |
-| Sprint 2 — security testing (HOSTEL-39) | 10 | 10 | 10 | 0 | 0 |
-| Sprint 2 — functional testing (HOSTEL-40) | 11 | 11 | 11 | 0 | 0 |
-| Sprint 2 — MySQL integration (HOSTEL-41) | 8 | 8 | 8 | 0 | 0 |
-| Sprint 2 — non-functional testing (HOSTEL-42) | 6 | 6 | 6 | 0 | 0 |
-| Sprint 2 — acceptance testing (HOSTEL-43) | 16 | 16 | 16 | 0 | 0 |
-| Sprint 2 — regression testing (HOSTEL-44) | 7 | 7 | 7 | 0 | 0 |
-| **Grand total** | **119** | **119** | **119** | **0** | **0** |
+| Activity | Planned | Executed | Passed | Assessed | Failed | Blocked |
+|---|---|---|---|---|---|---|
+| Sprint 1 — unit, integration, security | 61 | 61 | 61 | 0 | 0 | 0 |
+| Sprint 2 — security testing (HOSTEL-39) | 10 | 10 | 10 | 0 | 0 | 0 |
+| Sprint 2 — functional testing (HOSTEL-40) | 11 | 11 | 11 | 0 | 0 | 0 |
+| Sprint 2 — MySQL integration (HOSTEL-41) | 8 | 8 | 8 | 0 | 0 | 0 |
+| Sprint 2 — non-functional testing (HOSTEL-42) | 6 | 6 | 4 | 2 | 0 | 0 |
+| Sprint 2 — acceptance testing (HOSTEL-43) | 16 | 16 | 16 | 0 | 0 | 0 |
+| Sprint 2 — regression testing (HOSTEL-44) | 7 | 7 | 7 | 0 | 0 | 0 |
+| **Grand total** | **119** | **119** | **117** | **2** | **0** | **0** |
+
+Assessed = automated evidence passed but a stated limitation prevents full verification (TC-NFR-001 usability, TC-NFR-004 availability). These cases are counted as executed and not failed or blocked; they are distinguished from Passed because the STP's full verification intent was not met within the CI environment. See Section 4.4 and Section 9.
 
 ---
 
@@ -226,21 +228,28 @@ Full traceability is recorded in `docs/HOSTEL-45-rtm-sprint2-final.md`.
 | Low | 0 | 0 | 0 |
 | **Total** | **0** | **0** | **0** |
 
-No defect was identified in any Sprint 1 or Sprint 2 test activity. This reflects the reviewed test artifacts only and does not claim that no defect exists in untested areas.
+No defect was identified in the reviewed Sprint 1 and Sprint 2 test artifacts (HOSTEL-39 through HOSTEL-43 reports and the Sprint 1 test execution log).
+
+**Issue-tracker reconciliation is pending.** The HOSTEL-44 QA review (`docs/HOSTEL-44-final-qa-review.md`) records that issue-tracker reconciliation has not been completed and explicitly states: *"current HOSTEL-44 execution and issue-tracker reconciliation remain pending."* The zero-defect counts above reflect the reviewed test artifacts only and cannot be confirmed as final until that reconciliation is complete and any issues found are triaged. Update this table with actual counts once reconciliation is done.
 
 ---
 
 ## 8. Response-Time Measurements
 
-| Operation | Method | Measured time | Threshold | Result |
+All figures are individual single-run samples emitted as `NFR_METRIC` log lines by `students/test_nonfunctional.py` in GitHub Actions [run #270](https://github.com/SE-TEAM11-HMS/hostel-management-system/actions/runs/43620655695). They are not averages; no repeated-run average was calculated. The test enforces a hard 3 000 ms threshold per operation and fails automatically if any sample exceeds it. To obtain the exact numeric values, inspect the `NFR_METRIC duration_seconds=` and `max_duration_seconds=` output lines in the raw run #270 log.
+
+| Operation | Test method | Sample source | Threshold (ms) | Result |
 |---|---|---|---|---|
-| Administrator dashboard load | Django test client, MySQL CI | < 200 ms | 3 000 ms | Passed |
-| Student list page load | Django test client, MySQL CI | < 200 ms | 3 000 ms | Passed |
-| Available rooms page load | Django test client, MySQL CI | < 200 ms | 3 000 ms | Passed |
-| Room allocation form load | Django test client, MySQL CI | < 200 ms | 3 000 ms | Passed |
-| Student list — 25 records | Django test client, MySQL CI | < 200 ms | 3 000 ms | Passed |
-| Student list — 250 records | Django test client, MySQL CI | < 500 ms | 3 000 ms | Passed |
-| Student list — 500 records | Django test client, MySQL CI | < 1 000 ms | 3 000 ms | Passed |
+| Administrator dashboard load | `test_normal_admin_operations_meet_response_time_target` | `NFR_METRIC operation=dashboard duration_seconds=…` in run #270 log | 3 000 | Passed |
+| Student list page load | `test_normal_admin_operations_meet_response_time_target` | `NFR_METRIC operation=student_list duration_seconds=…` in run #270 log | 3 000 | Passed |
+| Available rooms page load | `test_normal_admin_operations_meet_response_time_target` | `NFR_METRIC operation=available_rooms duration_seconds=…` in run #270 log | 3 000 | Passed |
+| Room allocation form load | `test_normal_admin_operations_meet_response_time_target` | `NFR_METRIC operation=allocation_form duration_seconds=…` in run #270 log | 3 000 | Passed |
+| Student list — 25 records | `test_student_list_scales_through_500_records` | `NFR_METRIC student_records=25 list_duration_seconds=…` in run #270 log | 3 000 | Passed |
+| Student list — 250 records | `test_student_list_scales_through_500_records` | `NFR_METRIC student_records=250 list_duration_seconds=…` in run #270 log | 3 000 | Passed |
+| Student list — 500 records | `test_student_list_scales_through_500_records` | `NFR_METRIC student_records=500 list_duration_seconds=…` in run #270 log | 3 000 | Passed |
+| Availability probe — max of 20 requests | `test_short_run_availability_probe_has_no_failed_requests` | `NFR_METRIC availability_probe_requests=20 max_duration_seconds=…` in run #270 log | 3 000 | Passed |
+
+**Note on the previously stated upper bounds.** Earlier versions of this report stated broad upper bounds (e.g. "< 200 ms", "< 500 ms", "< 1 000 ms"). Those figures were not derived from the `NFR_METRIC` log output and have been removed. The actual per-operation samples are in the run #270 log as described above.
 
 **Limitation:** All measurements use the Django test client against a MySQL CI test database. They exclude browser rendering time, external network latency and concurrent-user load. They do not constitute a production performance benchmark.
 
@@ -264,14 +273,23 @@ No defect was identified in any Sprint 1 or Sprint 2 test activity. This reflect
 | All Sprint 1 and Sprint 2 committed stories implemented and reviewed | Met |
 | Functional testing completed — HMS-F-001 to HMS-F-017 | Met |
 | Security testing completed — HMS-SEC-001 to HMS-SEC-006 | Met |
-| Non-functional testing completed — HMS-NFR-001 to HMS-NFR-006 | Met (with stated limitations for NFR-001 and NFR-004) |
-| Acceptance tests AT-001 to AT-016 executed and passed | Met |
-| Regression testing completed | Met |
-| No unresolved critical or high-severity defect | Met |
+| Non-functional testing completed — HMS-NFR-001 to HMS-NFR-006 | Partially met — 4 of 6 cases Passed; HMS-NFR-001 and HMS-NFR-004 remain Action Required (see Section 9) |
+| Acceptance tests AT-001 to AT-016 executed and passed | Met — CI run #280 |
+| Regression testing completed | Met — 7 regression methods in `students/test_regression.py`; CI run on branch `test/hostel-44-regression-final-qa` |
+| No unresolved critical or high-severity defect | Not yet confirmed — issue-tracker reconciliation per HOSTEL-44 QA review is pending (see Section 7) |
 | RTM updated and evidence-linked | Met — `docs/HOSTEL-45-rtm-sprint2-final.md` |
-| CI passes on the integrated MySQL build | Met — CI run #280 |
+| Test summary report prepared and approved (STP §14) | Not yet met — this report is awaiting PR review and approval |
+| CI passes on the integrated MySQL build | Latest regression evidence: CI run on branch `test/hostel-44-regression-final-qa`; prior acceptance evidence: CI run #280 |
+| Stakeholder acceptance and production release sign-off | Not met — outside CI scope; no sign-off recorded |
 
-**Overall exit status: Passed** — subject to the limitations documented in Section 9.
+**Overall exit status: Conditional — not yet confirmed.**
+
+Automated test evidence is complete and no defect has been identified in the reviewed artifacts. The following items remain open and must be resolved before the exit criteria can be declared fully met:
+
+1. HMS-NFR-001 (usability) and HMS-NFR-004 (availability) remain Action Required; a formal usability study and sustained uptime monitoring have not been conducted.
+2. Issue-tracker reconciliation per the HOSTEL-44 QA review is pending; zero open defects cannot be confirmed as final until that is complete.
+3. This test summary report is awaiting PR review and approval as required by STP §14.
+4. Stakeholder acceptance and production release sign-off are outside CI scope and have not been recorded.
 
 ---
 
