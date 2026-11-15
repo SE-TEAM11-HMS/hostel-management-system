@@ -210,7 +210,7 @@ MySQL 8.0 Database  (hostel_db)
 
 All credentials are read from `.env` via `python-dotenv`. No credential is committed to source code. `.env` is listed in `.gitignore`.
 
-**Deviation from SAD v1.0:** SAD v1.0 (ADR-003, OI-1) described MySQL as the target database with SQLite as a temporary development/CI substitute. Sprint 2 completed the MySQL configuration. MySQL is now used in all environments.
+**Deviation from SAD v1.0:** SAD v1.0 (ADR-003, OI-1) described MySQL as the target database with SQLite as a temporary development/CI substitute. Sprint 1 used SQLite; Sprint 2 configured and tested MySQL locally and in CI. Production deployment has not been verified (see OI-7).
 
 ### 5.2 Entity–Relationship summary
 
@@ -301,22 +301,22 @@ Student ──────────────── Allocation ────
 
 ### 7.2 Service layer
 
-All service methods are decorated with `@transaction.atomic`. Records are locked with `select_for_update()` before modification. If any step raises an exception the transaction rolls back, preventing partial updates.
+All service methods are decorated with `@transaction.atomic`. `AllocationService` uses `select_for_update()` to lock student, allocation, and selected room records where required. `RoomService` does not use `select_for_update()`; it performs atomic conditional updates using `F()` expressions, constraining each update by the current occupancy and capacity. If an operation raises an exception, its transaction rolls back, preventing partial updates.
 
 #### RoomService (`rooms/services.py`)
 
 | Method | Signature | Behaviour |
 |---|---|---|
-| `reserve_bed` | `reserve_bed(room_id: int) -> Room` | Atomically increments `occupied_count` where `occupied_count < capacity`. Raises `RoomNotFoundError` if the room does not exist; raises `RoomFullError` if no beds are available. |
-| `release_bed` | `release_bed(room_id: int) -> Room` | Atomically decrements `occupied_count` where `occupied_count > 0`. Raises `RoomNotFoundError` if the room does not exist; raises `RoomNotOccupiedError` if the room has no occupied beds. |
+| `reserve_bed` | `reserve_bed(room_id: int) -> Room` | Uses an atomic conditional `F()`-expression update to increment `occupied_count` only where `occupied_count < capacity`. Raises `RoomNotFoundError` if the room does not exist; raises `RoomFullError` if no beds are available. |
+| `release_bed` | `release_bed(room_id: int) -> Room` | Uses an atomic conditional `F()`-expression update to decrement `occupied_count` only where `occupied_count > 0`. Raises `RoomNotFoundError` if the room does not exist; raises `RoomNotOccupiedError` if the room has no occupied beds. |
 
 #### AllocationService (`allocations/services.py`)
 
 | Method | Signature | Behaviour |
 |---|---|---|
-| `allocate_room` | `allocate_room(student_id: int, room_id: int) -> Allocation` | Locks student and room with `select_for_update()`. Raises `StudentNotFoundError`, `StudentAlreadyAllocatedError`, `RoomNotFoundError`, or `RoomFullError` on precondition failure. Calls `RoomService.reserve_bed`, then creates and returns an ACTIVE `Allocation`. |
-| `change_room` | `change_room(student_id: int, new_room_id: int) -> Allocation` | Locks student, active allocation, and destination room. Raises `StudentNotFoundError`, `ActiveAllocationNotFoundError`, `RoomNotFoundError`, `SameRoomError`, or `RoomFullError` on precondition failure. Calls `RoomService.reserve_bed` on the new room, marks the old allocation VACATED, calls `RoomService.release_bed` on the old room, and creates a new ACTIVE `Allocation`. |
-| `vacate_room` | `vacate_room(student_id: int) -> Allocation` | Locks student and active allocation. Raises `StudentNotFoundError` or `ActiveAllocationNotFoundError` on precondition failure. Marks the allocation VACATED with `vacated_at = now()`, calls `RoomService.release_bed`, and returns the updated allocation. History is retained. |
+| `allocate_room` | `allocate_room(student_id: int, room_id: int) -> Allocation` | Locks student and room with `select_for_update()`. Raises `StudentNotFoundError` or `StudentAlreadyAllocatedError` for student preconditions. Calls `RoomService.reserve_bed`; its `RoomNotFoundError` or `RoomFullError` may propagate. Then creates and returns an ACTIVE `Allocation`. |
+| `change_room` | `change_room(student_id: int, new_room_id: int) -> Allocation` | Locks student, active allocation, and destination room with `select_for_update()`. Raises `StudentNotFoundError`, `ActiveAllocationNotFoundError`, `RoomNotFoundError`, or `SameRoomError` for allocation preconditions. `RoomService.reserve_bed` may propagate `RoomNotFoundError` or `RoomFullError`; `RoomService.release_bed` may propagate `RoomNotFoundError` or `RoomNotOccupiedError`. On success, marks the old allocation VACATED and creates a new ACTIVE `Allocation`. |
+| `vacate_room` | `vacate_room(student_id: int) -> Allocation` | Locks student and active allocation with `select_for_update()`. Raises `StudentNotFoundError` or `ActiveAllocationNotFoundError` for allocation preconditions. `RoomService.release_bed` may propagate `RoomNotFoundError` or `RoomNotOccupiedError`. On success, marks the allocation VACATED with `vacated_at = now()` and returns it; history is retained. |
 
 ---
 
@@ -345,7 +345,7 @@ Original SAD v1.0 open issues are preserved with their original IDs. New issues 
 | OI-3 | Repeated-login rate limiting — deferred to Sprint 3 | Resolved in Sprint 2 — `django-axes` implemented (HOSTEL-38). |
 | OI-4 | HTTPS/TLS deployment verification | Open — `SECURE_SSL_REDIRECT` and related settings are configurable via `.env` but no production deployment has been verified. |
 | OI-5 | Capacity edits below current occupancy — edit form could allow `capacity < occupied_count` | Resolved — `Room` model `CheckConstraint` enforces `0 ≤ occupied_count ≤ capacity` at the database level; MySQL rejects any update that would violate this. Verified by MySQL integration tests in CI run #261. |
-| OI-6 | Final wireframe review — UI to be reviewed against wireframes before Sprint 2 release | Closed without formal action — no formal wireframe review was conducted. The implemented UI was accepted by the team as part of Sprint 2 completion. No outstanding UI discrepancies were recorded. |
+| OI-6 | Final wireframe review — UI to be reviewed against wireframes before Sprint 2 release | Deferred / open — no formal wireframe review or documented team acceptance evidence is available. Keep open until the UI is reviewed and the outcome is recorded. |
 
 **New issues (SAD v2.0):**
 
