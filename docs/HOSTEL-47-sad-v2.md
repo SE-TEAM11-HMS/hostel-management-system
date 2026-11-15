@@ -85,13 +85,15 @@ MySQL 8.0 Database  (hostel_db)
 
 ### 3.2 Deployment environments
 
-| Environment | Database | Notes |
+| Environment | Database | Status |
 |---|---|---|
-| Local development | MySQL 8.0 via `.env` | Credentials in `.env`; never committed |
-| CI (GitHub Actions) | MySQL 8.0 service container | Credentials in workflow environment variables |
-| Production | MySQL 8.0 | HTTPS, HSTS and reverse-proxy configuration required |
+| Local development | MySQL 8.0 via `.env` | Configured; developer-tested |
+| CI (GitHub Actions) | MySQL 8.0 service container | Verified — CI runs #245 through #292 |
+| Production | MySQL 8.0 | Not deployed — HTTPS/HSTS configuration is present but no production deployment has been verified |
 
-**Deviation from SAD v1.0:** SAD v1.0 (ADR-003, OI-1) allowed SQLite for Sprint 1 development and CI. Sprint 2 completed the MySQL configuration. All environments now use MySQL. SQLite is no longer used.
+**Note:** Sprint 1 CI used SQLite via Django's test runner. Sprint 2 completed the MySQL configuration; all Sprint 2 CI runs use MySQL. SQLite is no longer used in Sprint 2 or later.
+
+**Deviation from SAD v1.0:** SAD v1.0 (ADR-003, OI-1) allowed SQLite for Sprint 1 development and CI. MySQL is now configured for local and CI environments. Production deployment remains unverified (see OI-7).
 
 ---
 
@@ -103,10 +105,10 @@ MySQL 8.0 Database  (hostel_db)
 
 | Component | Description |
 |---|---|
-| `views.py` — `LoginView` | Validates administrator credentials. Uses `django-axes` for brute-force protection (5 attempts per username/IP in a rolling 15-minute window; returns HTTP 429 on lockout). Redirects to dashboard on success. |
-| `views.py` — `StudentLoginView` | Separate login endpoint for student accounts. Redirects to `student_portal` on success. |
-| `views.py` — `LogoutView` | POST-only. Clears the session and redirects to the login page. |
-| `views.py` — `DashboardView` | Requires authentication and `is_staff=True`. Returns HTTP 403 for non-staff users. |
+| `views.py` — `admin_login` (FBV) | Validates administrator credentials. Uses `django-axes` for brute-force protection (5 attempts per username/IP in a rolling 15-minute window; returns HTTP 429 on lockout). Redirects to dashboard on success. |
+| `views.py` — `student_login` (FBV) | Separate login endpoint for student accounts. Redirects to `student_portal` on success. |
+| `views.py` — `admin_logout` (FBV) | POST-only. Clears the session and redirects to the login page. |
+| `views.py` — `dashboard` (FBV) | Requires authentication and `is_staff=True`. Returns HTTP 403 for non-staff users. |
 | `middleware.py` — `AuthenticatedNoCacheMiddleware` | Adds `Cache-Control: no-store` to all authenticated responses to prevent back-button access after logout. |
 | `forms.py` | Login form with username and password fields. |
 
@@ -123,12 +125,13 @@ MySQL 8.0 Database  (hostel_db)
 | Component | Description |
 |---|---|
 | `models.py` — `Student` | Fields: `usn` (unique), `name`, `email` (unique), `phone` (10-digit regex), `department`, `academic_year` (1–4), `user` (FK to `AUTH_USER_MODEL`, nullable). |
-| `views.py` — `StudentListView` | Staff-only. Supports `?q=` search across USN, name, email, phone and department (case-insensitive). |
-| `views.py` — `StudentCreateView` | Staff-only. Validates via `StudentForm`. Displays success message on creation. |
-| `views.py` — `StudentDetailView` | Staff-only. Returns HTTP 404 for non-existent student. |
-| `views.py` — `StudentUpdateView` | Staff-only. Validates via `StudentForm`. Displays success message on update. |
-| `views.py` — `StudentDeleteView` | Staff-only. POST-only (GET returns HTTP 405). Redirects to student list on success. |
-| `views.py` — `StudentRoomView` | Staff-only. Displays the active allocation for a given student. |
+| `views.py` — `student_list` (FBV) | Staff-only. Supports `?q=` search across USN, name, email, phone and department (case-insensitive). |
+| `views.py` — `add_student` (FBV) | Staff-only. Validates via `StudentForm`. Displays success message on creation. |
+| `views.py` — `student_detail` (FBV) | Staff-only. Returns HTTP 404 for non-existent student. |
+| `views.py` — `student_update` (FBV) | Staff-only. Validates via `StudentForm`. Displays success message on update. |
+| `views.py` — `student_confirm_delete` (FBV) | Staff-only. Renders deletion confirmation page. |
+| `views.py` — `student_delete` (FBV) | Staff-only. POST-only. Redirects to student list on success. |
+| `views.py` — `student_room` (FBV) | Staff-only. Displays the active allocation for a given student. |
 | `forms.py` — `StudentForm` | Validates phone (10 digits), academic year (1–4) and all required fields. |
 
 #### 4.2.2 Student Portal
@@ -137,8 +140,8 @@ MySQL 8.0 Database  (hostel_db)
 
 | Component | Description |
 |---|---|
-| `views.py` — `StudentPortalView` | Login-required (student). Resolves the student record from the authenticated user. Ignores any `student_id` query parameter (IDOR prevention). Returns HTTP 403 for unlinked accounts. |
-| `views.py` — `StudentPortalRoomView` | Login-required (student). Displays the student's own active room allocation. |
+| `views.py` — `student_portal` (FBV) | Login-required (student). Resolves the student record from the authenticated user. Ignores any `student_id` query parameter (IDOR prevention). Returns HTTP 403 for unlinked accounts. |
+| `views.py` — `student_portal_room` (FBV) | Login-required (student). Displays the student's own active room allocation. |
 | `portal_urls.py` | URL patterns for student portal endpoints. |
 
 **Access control rule:** A student user must have a linked `Student` record (`student.user == request.user`). Unlinked accounts receive HTTP 403. Students cannot access any administrator page (HTTP 403).
@@ -153,14 +156,14 @@ MySQL 8.0 Database  (hostel_db)
 |---|---|
 | `models.py` — `Hostel` | Fields: `name` (unique), `block`. |
 | `models.py` — `Room` | Fields: `hostel` (FK, CASCADE), `room_number`, `capacity` (≥ 1), `occupied_count` (0 ≤ x ≤ capacity). Property: `available_beds = capacity − occupied_count`. Unique constraint: `(hostel, room_number)`. |
-| `views.py` — `AddHostelView` | Staff-only. Creates a new hostel. |
-| `views.py` — `AddRoomView` | Staff-only. Creates a room under a hostel. |
-| `views.py` — `RoomListView` | Staff-only. Lists all rooms. |
-| `views.py` — `AvailableRoomsView` | Staff-only. Lists rooms where `available_beds > 0`. |
-| `views.py` — `OccupiedRoomsView` | Staff-only. Lists rooms where `occupied_count > 0`. |
-| `views.py` — `RoomDetailView` | Staff-only. Shows room details and current allocations. |
-| `views.py` — `EditRoomView` | Staff-only. Updates room capacity. |
-| `services.py` — `RoomService` | Business logic for room validation. |
+| `views.py` — `add_hostel` (FBV) | Staff-only. Creates a new hostel. |
+| `views.py` — `add_room` (FBV) | Staff-only. Creates a room under a hostel. |
+| `views.py` — `room_list` (FBV) | Staff-only. Lists all rooms. |
+| `views.py` — `available_rooms` (FBV) | Staff-only. Lists rooms where `available_beds > 0`. |
+| `views.py` — `occupied_rooms` (FBV) | Staff-only. Lists rooms where `occupied_count > 0`. |
+| `views.py` — `room_detail` (FBV) | Staff-only. Shows room details and current allocations. |
+| `views.py` — `edit_room` (FBV) | Staff-only. Updates room capacity. |
+| `services.py` — `RoomService` | Atomic bed reservation and release. See Section 7.2. |
 | `forms.py` | Room creation and edit forms. |
 
 **Database integrity rules:**
@@ -177,12 +180,10 @@ MySQL 8.0 Database  (hostel_db)
 | Component | Description |
 |---|---|
 | `models.py` — `Allocation` | Fields: `student` (FK, PROTECT), `room` (FK, PROTECT), `active_student` (FK, nullable, unique — enforces one active allocation per student in MySQL), `allocated_at`, `vacated_at`, `status` (ACTIVE / VACATED). |
-| `services.py` — `AllocationService.allocate_room` | Checks room capacity. Creates `Allocation`. Increments `room.occupied_count`. Wrapped in a database transaction. |
-| `services.py` — `AllocationService.change_room` | Vacates the current allocation. Creates a new allocation in the new room. Atomic transaction. |
-| `services.py` — `AllocationService.vacate_room` | Sets `status = VACATED` and `vacated_at = now()`. Decrements `room.occupied_count`. Retains allocation history. |
-| `views.py` — `AllocateRoomView` | Staff-only POST. Calls `AllocationService.allocate_room`. |
-| `views.py` — `ChangeRoomView` | Staff-only. Calls `AllocationService.change_room`. |
-| `views.py` — `VacateRoomView` | Staff-only POST with confirmation. Calls `AllocationService.vacate_room`. |
+| `services.py` — `AllocationService` | Transactional allocation operations. See Section 7.2. |
+| `views.py` — `allocate_room` (FBV) | Staff-only GET/POST. Calls `AllocationService.allocate_room`. |
+| `views.py` — `change_room` (FBV) | Staff-only GET/POST. Calls `AllocationService.change_room`. |
+| `views.py` — `vacate_room` (FBV) | Staff-only GET/POST with confirmation. Calls `AllocationService.vacate_room`. |
 
 **Database integrity rules:**
 - `unique_active_allocation_per_student` (UniqueConstraint on `active_student`) — a student cannot have two active allocations simultaneously. MySQL allows multiple NULL values in a unique column, enabling multiple vacated records per student.
@@ -272,34 +273,50 @@ Student ──────────────── Allocation ────
 
 ### 7.1 URL structure
 
-| URL pattern | App | Access |
+| URL pattern | View function | Access |
 |---|---|---|
-| `/login/` | accounts | Public |
-| `/student-login/` | accounts | Public |
-| `/logout/` | accounts | Authenticated (POST only) |
-| `/dashboard/` | accounts | Staff only |
-| `/students/` | students | Staff only |
-| `/students/add/` | students | Staff only |
-| `/students/<pk>/` | students | Staff only |
-| `/students/<pk>/update/` | students | Staff only |
-| `/students/<pk>/delete/` | students | Staff only |
-| `/students/<pk>/room/` | students | Staff only |
-| `/portal/` | students | Student only |
-| `/portal/room/` | students | Student only |
-| `/hostels/add/` | rooms | Staff only |
-| `/rooms/` | rooms | Staff only |
-| `/rooms/add/` | rooms | Staff only |
-| `/rooms/available/` | rooms | Staff only |
-| `/rooms/occupied/` | rooms | Staff only |
-| `/rooms/<pk>/` | rooms | Staff only |
-| `/rooms/<pk>/edit/` | rooms | Staff only |
-| `/allocations/allocate/` | allocations | Staff only |
-| `/allocations/change/` | allocations | Staff only |
-| `/allocations/<pk>/vacate/` | allocations | Staff only |
+| `/login/` | `admin_login` | Public |
+| `/student-login/` | `student_login` | Public |
+| `/logout/` | `admin_logout` | Authenticated (POST only) |
+| `/dashboard/` | `dashboard` | Staff only |
+| `/students/` | `student_list` | Staff only |
+| `/students/add/` | `add_student` | Staff only |
+| `/students/<pk>/` | `student_detail` | Staff only |
+| `/students/<pk>/edit/` | `student_update` | Staff only |
+| `/students/<pk>/delete/confirm/` | `student_confirm_delete` | Staff only |
+| `/students/<pk>/delete/` | `student_delete` | Staff only |
+| `/students/<pk>/room/` | `student_room` | Staff only |
+| `/portal/` | `student_portal` | Student only |
+| `/portal/room/` | `student_portal_room` | Student only |
+| `/hostels/add/` | `add_hostel` | Staff only |
+| `/rooms/` | `room_list` | Staff only |
+| `/rooms/add/` | `add_room` | Staff only |
+| `/rooms/available/` | `available_rooms` | Staff only |
+| `/rooms/occupied/` | `occupied_rooms` | Staff only |
+| `/rooms/<room_id>/` | `room_detail` | Staff only |
+| `/rooms/<room_id>/edit/` | `edit_room` | Staff only |
+| `/allocations/allocate/` | `allocate_room` | Staff only |
+| `/allocations/change-room/<student_id>/` | `change_room` | Staff only |
+| `/allocations/vacate-room/<student_id>/` | `vacate_room` | Staff only |
 
 ### 7.2 Service layer
 
-The `AllocationService` in `allocations/services.py` encapsulates all allocation business logic. Views call service methods rather than manipulating models directly. All service operations that modify multiple records run inside a database transaction.
+All service methods are decorated with `@transaction.atomic`. Records are locked with `select_for_update()` before modification. If any step raises an exception the transaction rolls back, preventing partial updates.
+
+#### RoomService (`rooms/services.py`)
+
+| Method | Signature | Behaviour |
+|---|---|---|
+| `reserve_bed` | `reserve_bed(room_id: int) -> Room` | Atomically increments `occupied_count` where `occupied_count < capacity`. Raises `RoomNotFoundError` if the room does not exist; raises `RoomFullError` if no beds are available. |
+| `release_bed` | `release_bed(room_id: int) -> Room` | Atomically decrements `occupied_count` where `occupied_count > 0`. Raises `RoomNotFoundError` if the room does not exist; raises `RoomNotOccupiedError` if the room has no occupied beds. |
+
+#### AllocationService (`allocations/services.py`)
+
+| Method | Signature | Behaviour |
+|---|---|---|
+| `allocate_room` | `allocate_room(student_id: int, room_id: int) -> Allocation` | Locks student and room with `select_for_update()`. Raises `StudentNotFoundError`, `StudentAlreadyAllocatedError`, `RoomNotFoundError`, or `RoomFullError` on precondition failure. Calls `RoomService.reserve_bed`, then creates and returns an ACTIVE `Allocation`. |
+| `change_room` | `change_room(student_id: int, new_room_id: int) -> Allocation` | Locks student, active allocation, and destination room. Raises `StudentNotFoundError`, `ActiveAllocationNotFoundError`, `RoomNotFoundError`, `SameRoomError`, or `RoomFullError` on precondition failure. Calls `RoomService.reserve_bed` on the new room, marks the old allocation VACATED, calls `RoomService.release_bed` on the old room, and creates a new ACTIVE `Allocation`. |
+| `vacate_room` | `vacate_room(student_id: int) -> Allocation` | Locks student and active allocation. Raises `StudentNotFoundError` or `ActiveAllocationNotFoundError` on precondition failure. Marks the allocation VACATED with `vacated_at = now()`, calls `RoomService.release_bed`, and returns the updated allocation. History is retained. |
 
 ---
 
@@ -307,7 +324,7 @@ The `AllocationService` in `allocations/services.py` encapsulates all allocation
 
 | Area | SAD v1.0 description | Final implementation | Status |
 |---|---|---|---|
-| Database | SQLite for development/CI (ADR-003, OI-1); MySQL as target | MySQL used in all environments (local, CI, production) | Resolved in Sprint 2 |
+| Database | SQLite for development/CI (ADR-003, OI-1); MySQL as target | MySQL used in local and CI environments; production deployment not yet verified | Resolved in Sprint 2 (local + CI); production pending |
 | Sprint plan | Three sprints described | Project completed in two sprints; Sprint 3 items moved to Sprint 2 | Resolved |
 | Student portal | Deferred to Sprint 2 (OI-2) | Fully implemented in Sprint 2 (HOSTEL-33 to HOSTEL-37) | Resolved |
 | Brute-force login protection | Deferred to Sprint 3 (OI-3) | `django-axes` implemented in Sprint 2 (HOSTEL-38) | Resolved |
@@ -319,14 +336,24 @@ The `AllocationService` in `allocations/services.py` encapsulates all allocation
 
 ## 9. Open Issues
 
+Original SAD v1.0 open issues are preserved with their original IDs. New issues introduced in SAD v2.0 use IDs OI-7 onwards.
+
+| Issue ID | SAD v1.0 description | Disposition |
+|---|---|---|
+| OI-1 | MySQL configuration — SQLite used for Sprint 1 development and CI | Resolved in Sprint 2 — MySQL configured for local and CI environments. Production deployment not yet verified (see OI-7). |
+| OI-2 | Student portal scope — deferred to Sprint 2 | Resolved in Sprint 2 — fully implemented (HOSTEL-33 to HOSTEL-37). |
+| OI-3 | Repeated-login rate limiting — deferred to Sprint 3 | Resolved in Sprint 2 — `django-axes` implemented (HOSTEL-38). |
+| OI-4 | HTTPS/TLS deployment verification | Open — `SECURE_SSL_REDIRECT` and related settings are configurable via `.env` but no production deployment has been verified. |
+| OI-5 | Capacity edits below current occupancy — edit form could allow `capacity < occupied_count` | Resolved — `Room` model `CheckConstraint` enforces `0 ≤ occupied_count ≤ capacity` at the database level; MySQL rejects any update that would violate this. Verified by MySQL integration tests in CI run #261. |
+| OI-6 | Final wireframe review — UI to be reviewed against wireframes before Sprint 2 release | Closed without formal action — no formal wireframe review was conducted. The implemented UI was accepted by the team as part of Sprint 2 completion. No outstanding UI discrepancies were recorded. |
+
+**New issues (SAD v2.0):**
+
 | Issue ID | Description | Status |
 |---|---|---|
-| OI-1 | MySQL configuration (originally SQLite for development) | Resolved — MySQL configured in Sprint 2 |
-| OI-2 | Student portal scope confirmation | Resolved — fully implemented in Sprint 2 |
-| OI-3 | Repeated-login rate limiting | Resolved — `django-axes` implemented in Sprint 2 |
-| OI-4 | HTTPS/TLS deployment verification | Open — requires deployment-specific configuration; outside repository CI scope |
-| OI-5 | Formal usability/accessibility evaluation (HMS-NFR-001) | Open — manual review only; formal study deferred as future work |
-| OI-6 | Formal load/scalability testing (HMS-NFR-006) | Open — dataset-size scaling verified; concurrent-load testing deferred as future work |
+| OI-7 | Production deployment verification | Open — HTTPS, HSTS and reverse-proxy configuration is present but no production deployment has been verified. |
+| OI-8 | Formal usability/accessibility evaluation (HMS-NFR-001) | Open — automated rendering checks passed; formal human usability study deferred as future work. |
+| OI-9 | Formal concurrent-load testing (HMS-NFR-006) | Open — dataset-size scaling verified in CI; concurrent-user load testing deferred as future work. |
 
 ---
 
