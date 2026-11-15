@@ -131,8 +131,11 @@ Log in to MySQL as root and run the following commands. Replace `<your-password>
 CREATE DATABASE hostel_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 CREATE USER 'hostel_app'@'127.0.0.1' IDENTIFIED BY '<your-password>';
 GRANT ALL PRIVILEGES ON hostel_db.* TO 'hostel_app'@'127.0.0.1';
+GRANT CREATE, DROP ON *.* TO 'hostel_app'@'127.0.0.1';
 FLUSH PRIVILEGES;
 ```
+
+The Django test runner creates and drops a separate database named `test_hostel_db`. MySQL requires global `CREATE` and `DROP` privileges for those operations, so grant them only to this local development account. Do not reuse this account in production; production should use separate credentials limited to its application database.
 
 #### 4b. Configure environment variables
 
@@ -302,14 +305,14 @@ hostel-management-system/
 
 | Document | Location |
 |---|---|
-| Software Requirements Specification (SRS) | `docs/SRS_Hostel_management_system_team11.pdf` |
-| Software Test Plan (STP) | `docs/STP_Hostel_Management_system_team11.pdf` |
-| Software Architecture and Design (SAD v2.0) | `docs/HOSTEL-47-sad-v2.md` |
-| Requirements Traceability Matrix — Sprint 1 | `docs/RTM_Sprint1.md` |
-| Requirements Traceability Matrix — Sprint 2 Final | `docs/HOSTEL-45-rtm-sprint2-final.md` |
-| Final Test Summary Report | `docs/HOSTEL-46-final-test-summary-report.md` |
-| Sprint 2 Acceptance RTM | `docs/RTM_Sprint2_Acceptance.md` |
-| Sprint 1 Demo Video | `docs/sprint1_demo.mp4` |
+| Software Requirements Specification (SRS) | [Open PDF](docs/SRS_Hostel_management_system_team11.pdf) |
+| Software Test Plan (STP) | [Open PDF](docs/STP_Hostel_Management_system_team11.pdf) |
+| Software Architecture and Design (SAD v2.0) | [View document](docs/HOSTEL-47-sad-v2.md) |
+| Requirements Traceability Matrix — Sprint 1 | [View document](docs/RTM_Sprint1.md) |
+| Requirements Traceability Matrix — Sprint 2 Final | [View document](docs/HOSTEL-45-rtm-sprint2-final.md) |
+| Final Test Summary Report | [View document](docs/HOSTEL-46-final-test-summary-report.md) |
+| Sprint 2 Acceptance RTM | [View document](docs/RTM_Sprint2_Acceptance.md) |
+| Sprint 1 Demo Video | [Watch video](docs/sprint1_demo.mp4) |
 
 ---
 
