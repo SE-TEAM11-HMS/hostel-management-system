@@ -1,141 +1,150 @@
-# Hostel Management System — Updated Requirements Traceability Matrix
+# Hostel Management System — Sprint 2 Final RTM (HOSTEL-45)
 
-## Project Information
+## Project information
 
-Project: Hostel Management System
-Team: 11
-Jira story: HOSTEL-45
-Sprint: Sprint 2
-Status legend:
-- P = Passed — requirement implemented and verified by automated test evidence
-- NT = Not Tested — no automated or manual test evidence recorded
-- A = Action Required — partially verified; further verification or action needed
+- Project: Hostel Management System
+- Team: 11
+- Document: Requirements Traceability Matrix — Sprint 2 Final
+- Supersedes: `docs/RTM_Sprint1.md` (Sprint 1 RTM)
+- Status legend: **P** = Passed · **NT** = Not Tested · **A** = Action Required (automated evidence exists; a stated limitation prevents full verification)
 
 ---
 
-## 1. Functional Requirements (HMS-F-001 to HMS-F-017)
+## 1. Functional requirements — Sprint 1 scope (HMS-F-001 to HMS-F-006, HMS-F-015)
 
-### 1.1 Authentication (Sprint 1)
+Sprint 1 CI evidence: GitHub Actions [run #40696524346](https://github.com/SE-TEAM11-HMS/hostel-management-system/actions/runs/40696524346) — 61 tests passed.
 
-| Requirement ID | Requirement | System Module | Test Case | Test Evidence | Status | Notes |
-|---|---|---|---|---|---|---|
-| HMS-F-001 | Administrator login with valid credentials | `accounts/views.py` — `LoginView` | `accounts/tests.py::LoginViewTest::test_valid_login_redirects_to_dashboard` | Automated test passed; CI run #245, #280 | P | Verified in Sprint 1 and Sprint 2 regression |
-| HMS-F-002 | Reject invalid login credentials | `accounts/views.py` — `LoginView` | `accounts/tests.py::LoginViewTest::test_invalid_password_shows_error` | Automated test passed; CI run #245 | P | Generic error message; no session created |
-
-### 1.2 Student Management (Sprint 1)
-
-| Requirement ID | Requirement | System Module | Test Case | Test Evidence | Status | Notes |
-|---|---|---|---|---|---|---|
-| HMS-F-003 | Add student record | `students/views.py` — `StudentCreateView` | `students/tests.py::StudentViewTest::test_valid_post_creates_student` | Automated test passed; CI run #245 | P | Duplicate USN and email rejected |
-| HMS-F-004 | View student details | `students/views.py` — `StudentDetailView` | `students/tests.py::StudentViewTest::test_admin_can_view_student_detail` | Automated test passed; CI run #245 | P | Returns 404 for non-existent student |
-| HMS-F-005 | Update student record | `students/views.py` — `StudentUpdateView` | `students/tests.py::StudentViewTest::test_admin_can_update_student` | Automated test passed; CI run #245 | P | Invalid data rejected without saving |
-| HMS-F-006 | Remove student record | `students/views.py` — `StudentDeleteView` | `students/tests.py::StudentViewTest::test_admin_can_delete_student` | Automated test passed; CI run #245 | P | POST-only; GET returns 405 |
-| HMS-F-015 | Search student records | `students/views.py` — `StudentListView` (`?q=`) | `students/tests.py::StudentViewTest::test_search_returns_matching_students` | Automated test passed; CI run #245 | P | Case-insensitive; searches USN, name, email, phone, department |
-
-### 1.3 Room Management (Sprint 2)
-
-| Requirement ID | Requirement | System Module | Test Case | Test Evidence | Status | Notes |
-|---|---|---|---|---|---|---|
-| HMS-F-007 | Add hostel and room details | `rooms/views.py` — `AddHostelView`, `AddRoomView` | `rooms/tests.py::RoomCreationTest` | Automated test passed; CI run #254 | P | Unique room number per hostel enforced |
-| HMS-F-008 | View available rooms | `rooms/views.py` — `AvailableRoomsView` | `rooms/tests.py::AvailableRoomsTest` | Automated test passed; CI run #254 | P | Lists rooms with available_beds > 0 |
-| HMS-F-009 | View occupied rooms | `rooms/views.py` — `OccupiedRoomsView` | `rooms/tests.py::OccupiedRoomsTest` | Automated test passed; CI run #254 | P | Lists rooms with occupied_count > 0 |
-| HMS-F-017 | View room details | `rooms/views.py` — `RoomDetailView` | `rooms/tests.py::RoomDetailTest` | Automated test passed; CI run #254, #280 | P | Shows room info and current allocations |
-
-### 1.4 Room Allocation (Sprint 2)
-
-| Requirement ID | Requirement | System Module | Test Case | Test Evidence | Status | Notes |
-|---|---|---|---|---|---|---|
-| HMS-F-010 | Allocate room to student | `allocations/views.py` — `AllocateRoomView`; `allocations/services.py` — `AllocationService.allocate_room` | `allocations/tests.py::AllocationTest::test_successful_allocation` | Automated test passed; CI run #261, #280 | P | Occupancy incremented atomically |
-| HMS-F-011 | Prevent allocation of a full room | `allocations/services.py` — capacity check before allocation | `allocations/tests.py::AllocationTest::test_full_room_rejected` | Automated test passed; CI run #254 | P | Returns error when available_beds = 0 |
-| HMS-F-012 | View allocated room details | `students/views.py` — `StudentRoomView` | `students/tests.py::StudentRoomViewTest::test_admin_can_view_active_room_details` | Automated test passed; CI run #254 | P | Shows active allocation; None if no active allocation |
-| HMS-F-013 | Change room allocation | `allocations/views.py` — `ChangeRoomView`; `allocations/services.py` — `AllocationService.change_room` | `allocations/tests.py::ChangeRoomTest`; `students/tests.py::StudentPortalTests::test_student_sees_new_room_after_room_change` | Automated tests passed; CI run #254 | P | Old allocation vacated; new allocation created atomically |
-| HMS-F-014 | Vacate room | `allocations/views.py` — `VacateRoomView`; `allocations/services.py` — `AllocationService.vacate_room` | `allocations/tests.py::VacateRoomTest`; `students/test_regression.py::IntegratedRoomAndPortalRegressionTests::test_room_management_allocation_student_portal_and_vacation_work_together` | Automated tests passed; CI run #280 | P | History retained; occupancy decremented |
-| HMS-F-016 | Update room availability (occupied_count) | `allocations/services.py` — increments/decrements `Room.occupied_count` | `allocations/test_mysql_integration.py` | Automated test passed; CI run #261 | P | Verified via MySQL integration tests |
-
-### 1.5 Student Portal (Sprint 2)
-
-| Requirement ID | Requirement | System Module | Test Case | Test Evidence | Status | Notes |
-|---|---|---|---|---|---|---|
-| HMS-F-012 (portal) | Student views own allocated room | `students/views.py` — `StudentPortalRoomView` | `students/tests.py::StudentPortalTests::test_linked_student_can_see_own_active_allocation` | Automated test passed; CI run #280 | P | Student sees only their own allocation |
+| Req ID | Requirement | STP test case | Actual test identifier | CI evidence | Status |
+| --- | --- | --- | --- | --- | --- |
+| HMS-F-001 | Administrator login | TC-001 | `accounts/tests.py::AdminAuthenticationTests.test_valid_admin_credentials_allow_login` | Run #40696524346 | P |
+| HMS-F-002 | Invalid login handling | TC-002 | `accounts/tests.py::AdminAuthenticationTests.test_invalid_password_is_rejected`; `test_blank_fields_are_rejected`; `test_non_admin_cannot_use_admin_login` | Run #40696524346 | P |
+| HMS-F-003 | Add student details | TC-003 | `students/tests.py::StudentViewTest.test_valid_post_creates_student`; `StudentFormTest.test_valid_student_form` | Run #40696524346 | P |
+| HMS-F-004 | View student details | TC-004 | `students/tests.py::StudentViewTest.test_admin_can_view_student_detail` | Run #40696524346 | P |
+| HMS-F-005 | Update student details | TC-005 | `students/tests.py::StudentViewTest.test_admin_can_update_student`; `test_invalid_update_does_not_save` | Run #40696524346 | P |
+| HMS-F-006 | Remove student record | TC-006 | `students/tests.py::StudentViewTest.test_admin_can_delete_student`; `students/test_integration.py` (delete workflow) | Run #40696524346 | P |
+| HMS-F-015 | Search student records | TC-015 | `students/test_functional_search.py::StudentSearchFunctionalTests.test_admin_search_returns_only_matching_student`; `students/tests.py::StudentViewTest.test_search_returns_matching_students` | Run #40696524346 | P |
 
 ---
 
-## 2. Security Requirements (HMS-SEC-001 to HMS-SEC-006)
+## 2. Functional requirements — Sprint 2 scope (HMS-F-007 to HMS-F-014, HMS-F-016 to HMS-F-017)
 
-| Requirement ID | Requirement | System Module | Test Case | Test Evidence | Status | Notes |
-|---|---|---|---|---|---|---|
-| HMS-SEC-001 | Authenticate users before granting access | `accounts/views.py`; `@login_required` on all protected views | `accounts/tests.py::LoginViewTest::test_valid_login_redirects_to_dashboard`; `students/test_regression.py::AuthenticationRegressionTests::test_admin_can_authenticate_and_open_dashboard` | Automated tests passed; CI run #245, #280 | P | Unauthenticated requests redirected to login |
-| HMS-SEC-002 | Reject invalid credentials with a generic message | `accounts/views.py` — `LoginView`; `django-axes` brute-force protection | `students/test_regression.py::AuthenticationRegressionTests::test_invalid_credentials_do_not_create_an_authenticated_session` | Automated test passed; CI run #245 | P | No session created; same message for wrong password and unknown user |
-| HMS-SEC-003 | Restrict administrative pages to staff users only | `accounts/views.py`; `students/views.py`; `rooms/views.py`; `allocations/views.py` — `is_staff` checks | `students/test_regression.py::AuthenticationRegressionTests::test_student_account_remains_blocked_from_admin_dashboard`; `students/test_regression.py::AuthorizationRegressionTests::test_student_cannot_access_or_mutate_admin_student_and_room_records` | Automated tests passed; CI run #245, #280 | P | HTTP 403 returned for non-staff users |
-| HMS-SEC-004 | Protect student and room data from unauthorized modification or deletion | `students/views.py`; `allocations/views.py` — permission checks on all mutation views | `students/test_security.py`; `students/test_regression.py::AuthorizationRegressionTests` | Automated tests passed; CI run #245, #280 | P | Student deletion and room allocation blocked for non-staff |
-| HMS-SEC-005 | Terminate session on logout and restrict access to protected pages | `accounts/views.py` — `LogoutView` (POST-only); `AuthenticatedNoCacheMiddleware` | `students/tests.py::StudentPortalTests::test_student_post_logout_terminates_session` | Automated test passed; CI run #245 | P | Session cleared; back-button access prevented via no-cache headers |
-| HMS-SEC-006 | Validate and sanitize all user input before storage | `students/forms.py`; `rooms/forms.py`; model `clean()` methods; `CheckConstraint` on models | `students/tests.py::StudentFormTest`; `rooms/test_room_validation.py` | Automated tests passed; CI run #245, #254 | P | Phone 10-digit regex, academic year 1–4, room capacity ≥ 1 |
+Sprint 2 CI evidence: GitHub Actions [run #254](https://github.com/SE-TEAM11-HMS/hostel-management-system/actions/runs/43616388354) — functional tests passed.
 
----
-
-## 3. Non-Functional Requirements (HMS-NFR-001 to HMS-NFR-006)
-
-| Requirement ID | Requirement | System Module | Test Case | Test Evidence | Status | Notes |
-|---|---|---|---|---|---|---|
-| HMS-NFR-001 | User-friendly interface | All templates — login, dashboard, student management, room management, student portal | `students/test_nonfunctional.py::TC-NFR-001` — interface rendering and heading checks | CI run #270 | A | Automated rendering checks passed. Formal usability or accessibility study not conducted; manual review only |
-| HMS-NFR-002 | Response time within 3 seconds for normal operations | All views | `students/test_nonfunctional.py::TC-NFR-002` — timed dashboard, student list, available rooms and allocation form | CI run #270; all operations under 3-second threshold | P | Test-client timing only; excludes browser rendering and external network latency |
-| HMS-NFR-003 | Data accuracy and consistency | `allocations/services.py`; MySQL FK constraints; transaction rollback | `allocations/test_mysql_integration.py::TC-NFR-003` — allocation and vacation consistency; rollback verification | CI run #261, #270 | P | MySQL FK enforcement and transaction rollback verified |
-| HMS-NFR-004 | System availability during operational hours | Django application server; MySQL database | `students/test_nonfunctional.py::TC-NFR-004` — 20-request availability probe | CI run #270; all probe requests passed | A | Short CI probe only; sustained production uptime monitoring not conducted |
-| HMS-NFR-005 | Maintainability — modular, testable codebase | Four Django apps (`accounts`, `students`, `rooms`, `allocations`); automated test suite; CI pipeline | `students/test_nonfunctional.py::TC-NFR-005` — full regression suite execution | CI run #270; complete automated suite passed | P | Formal maintainability metric not measured; modular structure and test coverage assessed |
-| HMS-NFR-006 | Scalability — acceptable performance as data grows | `students/views.py` — `StudentListView` | `students/test_nonfunctional.py::TC-NFR-006` — student list at 25, 250 and 500 records | CI run #270; all dataset sizes returned under threshold | P | Concurrent-load testing not conducted; dataset-size scaling verified only |
+| Req ID | Requirement | STP test case | Actual test identifier | CI evidence | Status |
+| --- | --- | --- | --- | --- | --- |
+| HMS-F-007 | Add room details | TC-007 | `rooms/tests.py::HostelRoomManagementTests.test_admin_can_add_hostel`; `test_admin_can_add_room` | Run #254 | P |
+| HMS-F-008 | View available rooms | TC-008 | `rooms/tests.py::RoomAvailabilityAndDetailsTests.test_available_rooms_include_empty_and_partially_occupied` | Run #254 | P |
+| HMS-F-009 | View occupied rooms | TC-009 | `rooms/tests.py::RoomAvailabilityAndDetailsTests.test_occupied_rooms_include_partially_occupied_and_full` | Run #254 | P |
+| HMS-F-010 | Allocate room | TC-010 | `allocations/tests.py::AllocationServiceTests.test_successful_room_allocation`; `AllocationPermissionTests.test_admin_can_allocate_room` | Run #254 | P |
+| HMS-F-011 | Prevent allocation of a full room | TC-011 | `allocations/tests.py::AllocationServiceTests.test_full_room_rejects_allocation` | Run #254 | P |
+| HMS-F-012 | View allocated room | TC-012 | `students/tests.py::StudentPortalTests.test_student_with_active_allocation_can_view_actual_room_details` | Run #254 | P |
+| HMS-F-013 | Update room allocation | TC-013 | `allocations/tests.py::AllocationServiceTests.test_successful_room_change`; `AllocationPermissionTests.test_admin_can_change_student_room` | Run #254 | P |
+| HMS-F-014 | Vacate room | TC-014 | `allocations/tests.py::AllocationServiceTests.test_successful_room_vacation`; `AllocationPermissionTests.test_admin_can_confirm_room_vacation` | Run #254 | P |
+| HMS-F-016 | Update room availability | TC-016 | `rooms/tests.py::HostelRoomManagementTests.test_available_beds_calculation`; allocation/change/vacation evidence above (run #254) | Run #254 | P |
+| HMS-F-017 | View room details | TC-017 | `rooms/tests.py::RoomAvailabilityAndDetailsTests.test_room_details_display_correct_information` | Run #254 | P |
 
 ---
 
-## 4. Acceptance Test Mapping (AT-001 to AT-016)
+## 3. Security requirements
 
-| AT ID | Linked Requirement | Test Description | Test Case / Evidence | Status |
-|---|---|---|---|---|
-| AT-001 | HMS-SEC-001 | Administrator login with valid credentials | `students/test_regression.py::AuthenticationRegressionTests::test_admin_can_authenticate_and_open_dashboard` | P |
-| AT-002 | HMS-SEC-002 | Invalid-credential rejection | `students/test_regression.py::AuthenticationRegressionTests::test_invalid_credentials_do_not_create_an_authenticated_session` | P |
-| AT-003 | HMS-F-003 | Student record creation | `students/tests.py::StudentViewTest::test_valid_post_creates_student` | P |
-| AT-004 | HMS-F-015 | Student search by USN | `students/test_regression.py::StudentLifecycleRegressionTests::test_student_search_returns_matching_record_without_unrelated_records` | P |
-| AT-005 | HMS-F-005 | Student record update and invalid-update rejection | `students/tests.py::StudentViewTest::test_admin_can_update_student` | P |
-| AT-006 | HMS-F-007 | Hostel and room creation | `rooms/tests.py::RoomCreationTest` | P |
-| AT-007 | HMS-F-008 | Available-room listing | `rooms/tests.py::AvailableRoomsTest` | P |
-| AT-008 | HMS-F-010 | Successful room allocation | `allocations/tests.py::AllocationTest::test_successful_allocation` | P |
-| AT-009 | HMS-F-011 | Full-room allocation rejection | `allocations/tests.py::AllocationTest::test_full_room_rejected` | P |
-| AT-010 | HMS-F-012 | Admin view of student allocated room | `students/tests.py::StudentRoomViewTest::test_admin_can_view_active_room_details` | P |
-| AT-011 | HMS-F-013 | Room change | `allocations/tests.py::ChangeRoomTest` | P |
-| AT-012 | HMS-F-014 | Room vacation and history retention | `students/test_regression.py::IntegratedRoomAndPortalRegressionTests::test_room_management_allocation_student_portal_and_vacation_work_together` | P |
-| AT-013 | HMS-SEC-003 | Non-administrator denied access to admin dashboard | `students/test_regression.py::AuthorizationRegressionTests::test_student_cannot_access_or_mutate_admin_student_and_room_records` | P |
-| AT-014 | HMS-NFR-002 | Representative operation response time | `students/test_nonfunctional.py::TC-NFR-002` | P |
-| AT-015 | HMS-NFR-003 | Student update data consistency | `students/tests.py::StudentViewTest::test_admin_can_update_student` | P |
-| AT-016 | HMS-SEC-005 | Logout terminates session; protected pages inaccessible | `students/tests.py::StudentPortalTests::test_student_post_logout_terminates_session` | P |
+Sprint 2 CI evidence: GitHub Actions [run #245](https://github.com/SE-TEAM11-HMS/hostel-management-system/actions/runs/42785878509) — all security tests passed.
+
+| Req ID | Requirement | STP test case | Actual test identifier | CI evidence | Status |
+| --- | --- | --- | --- | --- | --- |
+| HMS-SEC-001 | User authentication | TC-SEC-001 | `accounts/tests.py::AdminAuthenticationTests.test_valid_admin_credentials_allow_login` | Run #245 | P |
+| HMS-SEC-002 | Reject invalid credentials | TC-SEC-002 | `accounts/tests.py::AdminAuthenticationTests.test_invalid_password_is_rejected`; `test_blank_fields_are_rejected` | Run #245 | P |
+| HMS-SEC-003 | Restrict administrator operations | TC-SEC-003 | `accounts/tests.py::AdminAuthenticationTests.test_non_admin_cannot_access_dashboard`; `students/tests.py::StudentViewTest.test_non_admin_is_forbidden`; `rooms/tests.py::HostelRoomManagementTests.test_non_admin_cannot_access_room_list` | Run #245 | P |
+| HMS-SEC-004 | Protect data from unauthorized modification or deletion | TC-SEC-004 | `students/test_security.py::StudentDataProtectionTests.test_non_admin_cannot_update_student`; `test_non_staff_cannot_delete_student`; `test_csrf_token_is_required_for_deletion` | Run #245 | P |
+| HMS-SEC-005 | Restrict protected access after logout | TC-SEC-005 | `accounts/tests.py::AdminAuthenticationTests.test_logout_terminates_session`; `test_dashboard_requires_authentication` | Run #245 | P |
+| HMS-SEC-006 | Validate input before storage | TC-SEC-006 | `students/test_security.py::StudentDataProtectionTests.test_invalid_email_is_not_saved_on_add`; `rooms/test_room_validation.py::RoomValidationTests` | Run #245 | P |
 
 ---
 
-## 5. Requirements with Action Required or Not Tested
+## 4. Non-functional requirements
 
-| Requirement ID | Status | Reason | Action |
-|---|---|---|---|
-| HMS-NFR-001 | A | Automated rendering checks passed; formal usability or accessibility study not conducted | Manual review completed; formal study deferred as future work |
-| HMS-NFR-004 | A | Short CI availability probe passed; sustained production uptime monitoring not conducted | Deployment-level monitoring required for production release |
+Sprint 2 CI evidence: GitHub Actions [run #270](https://github.com/SE-TEAM11-HMS/hostel-management-system/actions/runs/43620655695) — NFR tests passed or assessed with stated limitations.
 
----
-
-## 6. CI Evidence Summary
-
-| CI Run | Activity | Result |
-|---|---|---|
-| [#39745586188](https://github.com/SE-TEAM11-HMS/hostel-management-system/actions/runs/39745586188) | Sprint 1 — authentication and student management (62 tests) | Passed |
-| [#245](https://github.com/SE-TEAM11-HMS/hostel-management-system/actions/runs/42785878509) | Security testing — HOSTEL-39 | Passed |
-| [#254](https://github.com/SE-TEAM11-HMS/hostel-management-system/actions/runs/43616388354) | Functional room and allocation testing — HOSTEL-40 | Passed |
-| [#261](https://github.com/SE-TEAM11-HMS/hostel-management-system/actions/runs/43618572521) | MySQL integration testing — HOSTEL-41 | Passed |
-| [#270](https://github.com/SE-TEAM11-HMS/hostel-management-system/actions/runs/43620655695) | Non-functional testing — HOSTEL-42 | Passed (with stated limits) |
-| [#280](https://github.com/SE-TEAM11-HMS/hostel-management-system/actions/runs/43623547770) | Acceptance testing AT-001 to AT-016 — HOSTEL-43 | Passed |
+| Req ID | Requirement | STP test case | Actual test identifier | CI evidence | Status | Notes |
+| --- | --- | --- | --- | --- | --- | --- |
+| HMS-NFR-001 | User-friendly interface | TC-NFR-001 | `students/test_nonfunctional.py` — primary-interface rendering and heading checks | Run #270 | A | Automated interface smoke check passed. A representative-user usability/accessibility study requires a deployed environment and is outside CI scope. |
+| HMS-NFR-002 | Response time within 3 seconds | TC-NFR-002 | `students/test_nonfunctional.py::NonFunctionalPerformanceTests.test_normal_admin_operations_meet_response_time_target` | Run #270 | P | All measured in-process MySQL CI operations completed under the enforced 3-second threshold. |
+| HMS-NFR-003 | Data accuracy and consistency | TC-NFR-003 | `students/test_nonfunctional.py` — allocation/vacation consistency check; HOSTEL-41 MySQL integration checks | Run #270 | P | Active allocations and room occupancy remained consistent across tested operations. |
+| HMS-NFR-004 | System availability | TC-NFR-004 | `students/test_nonfunctional.py` — 20-request availability probe | Run #270 | A | All 20 probe requests returned HTTP 200 under the threshold. Full administrative-hours availability requires a deployed, monitored environment outside CI scope. |
+| HMS-NFR-005 | Maintainability | TC-NFR-005 | Full regression suite (`python manage.py test`); separate student, room and allocation module tests | Run #270 | P | Complete automated suite passed; modules remain independently testable. |
+| HMS-NFR-006 | Scalability | TC-NFR-006 | `students/test_nonfunctional.py` — student-list checks at 25, 250 and 500 records | Run #270 | P | Each dataset size returned expected results under the 3-second threshold. Concurrent-load testing remains outside CI scope. |
 
 ---
 
-## 7. Notes
+## 5. Acceptance tests
 
-1. P indicates the listed test evidence passed in the referenced CI run.
-2. NT indicates the requirement has not been tested; no evidence exists.
-3. A indicates the requirement was partially verified; further verification or action is required.
-4. All statuses reflect actual test results and CI evidence, not assumptions.
-5. Sprint 1 RTM is retained in `docs/RTM_Sprint1.md` for reference.
-6. This document supersedes the Sprint 1 RTM for Sprint 2 final traceability.
+Sprint 2 CI evidence: GitHub Actions [run #280](https://github.com/SE-TEAM11-HMS/hostel-management-system/actions/runs/43623547770) — all 16 acceptance tests passed.
+
+Requirement mapping cross-references SRS §6.2 and STP §13. Where a single acceptance test exercises more than one requirement, all linked requirement IDs are listed. Inconsistencies between the SRS, STP §13 and the test reports are noted in the Notes column.
+
+| AT ID | Related requirements | Actual test identifier | CI evidence | Status | Notes |
+| --- | --- | --- | --- | --- | --- |
+| AT-001 | HMS-SEC-001 | `accounts/tests.py::AdminAuthenticationTests.test_valid_admin_credentials_allow_login` | Run #280 | P | SRS §6.2 and STP §13 both map AT-001 to HMS-SEC-001 only. Consistent. |
+| AT-002 | HMS-SEC-002 | `accounts/tests.py::AdminAuthenticationTests.test_invalid_password_is_rejected` | Run #280 | P | Consistent across SRS, STP and test report. |
+| AT-003 | HMS-F-003 | `students/tests.py::StudentViewTest.test_valid_post_creates_student` | Run #280 | P | Consistent. |
+| AT-004 | HMS-F-004; HMS-F-015 | `students/tests.py::StudentViewTest.test_admin_can_view_student_detail`; `students/test_functional_search.py::StudentSearchFunctionalTests.test_admin_search_returns_only_matching_student` | Run #280 | P | SRS §6.2 links AT-004 to both HMS-F-004 (view student) and HMS-F-015 (search). The Sprint 2 acceptance RTM listed only HMS-F-005; corrected here to reflect SRS §6.2. |
+| AT-005 | HMS-F-005 | `students/tests.py::StudentViewTest.test_admin_can_update_student`; `test_invalid_update_does_not_save` | Run #280 | P | Consistent. |
+| AT-006 | HMS-F-007 | `rooms/tests.py::HostelRoomManagementTests.test_admin_can_add_hostel`; `test_admin_can_add_room` | Run #280 | P | Consistent. |
+| AT-007 | HMS-F-008 | `rooms/tests.py::RoomAvailabilityAndDetailsTests.test_available_rooms_include_empty_and_partially_occupied` | Run #280 | P | Consistent. |
+| AT-008 | HMS-F-010 | `allocations/tests.py::AllocationServiceTests.test_successful_room_allocation` | Run #280 | P | Consistent. |
+| AT-009 | HMS-F-011 | `allocations/tests.py::AllocationServiceTests.test_full_room_rejects_allocation` | Run #280 | P | Consistent. |
+| AT-010 | HMS-F-012 | `students/tests.py::StudentPortalTests.test_student_with_active_allocation_can_view_actual_room_details` | Run #280 | P | Consistent. |
+| AT-011 | HMS-F-013 | `allocations/tests.py::AllocationServiceTests.test_successful_room_change`; `AllocationPermissionTests.test_admin_can_change_student_room` | Run #280 | P | Consistent. |
+| AT-012 | HMS-F-014; HMS-F-016 | `allocations/tests.py::AllocationServiceTests.test_successful_room_vacation`; `rooms/tests.py::HostelRoomManagementTests.test_available_beds_calculation` | Run #280 | P | SRS §6.2 links AT-012 to both HMS-F-014 (vacate room) and HMS-F-016 (update room availability). The Sprint 2 acceptance RTM listed only HMS-F-014; corrected here to reflect SRS §6.2. |
+| AT-013 | HMS-SEC-001; HMS-SEC-003 | `accounts/tests.py::AdminAuthenticationTests.test_non_admin_cannot_access_dashboard` | Run #280 | P | SRS §6.2 links AT-013 to both HMS-SEC-001 (authentication gate) and HMS-SEC-003 (restrict admin operations). The Sprint 2 acceptance RTM listed only HMS-SEC-003; corrected here to reflect SRS §6.2. |
+| AT-014 | HMS-NFR-002 | `students/test_nonfunctional.py::NonFunctionalPerformanceTests.test_normal_admin_operations_meet_response_time_target` | Run #280 | P | Consistent. |
+| AT-015 | HMS-NFR-003 | `students/tests.py::StudentViewTest.test_admin_can_update_student`; `test_invalid_update_does_not_save` | Run #280 | P | Consistent. |
+| AT-016 | HMS-SEC-005 | `accounts/tests.py::AdminAuthenticationTests.test_logout_terminates_session`; `test_dashboard_requires_authentication` | Run #280 | P | Consistent. |
+
+---
+
+## 6. Not Tested summary
+
+No requirement in this RTM carries NT status. All 17 functional requirements (HMS-F-001 to HMS-F-017), all 6 security requirements (HMS-SEC-001 to HMS-SEC-006), and all 6 non-functional requirements (HMS-NFR-001 to HMS-NFR-006) have automated test evidence recorded against them across the Sprint 1 and Sprint 2 CI runs listed above.
+
+HMS-NFR-001 and HMS-NFR-004 retain **A** (Action Required) status because the automated evidence is an interface smoke check and a short CI availability probe respectively; neither substitutes for a formal human usability study or sustained production uptime monitoring.
+
+---
+
+## 7. Failed and blocked test summary
+
+No test failure or blocked test was recorded in any of the Sprint 1 or Sprint 2 CI runs referenced by this RTM:
+
+| CI run | Tests executed | Passed | Failed | Blocked | Link |
+| --- | --- | --- | --- | --- | --- |
+| Sprint 1 — run #40696524346 | 61 | 61 | 0 | 0 | [Actions run #40696524346](https://github.com/SE-TEAM11-HMS/hostel-management-system/actions/runs/40696524346) |
+| Security — run #245 | Full suite | All | 0 | 0 | [Actions run #245](https://github.com/SE-TEAM11-HMS/hostel-management-system/actions/runs/42785878509) |
+| Functional — run #254 | Full suite | All | 0 | 0 | [Actions run #254](https://github.com/SE-TEAM11-HMS/hostel-management-system/actions/runs/43616388354) |
+| MySQL integration — run #261 | Full suite | All | 0 | 0 | [Actions run #261](https://github.com/SE-TEAM11-HMS/hostel-management-system/actions/runs/43618572521) |
+| NFR — run #270 | Full suite | All | 0 | 0 | [Actions run #270](https://github.com/SE-TEAM11-HMS/hostel-management-system/actions/runs/43620655695) |
+| Acceptance — run #280 | Full suite | All | 0 | 0 | [Actions run #280](https://github.com/SE-TEAM11-HMS/hostel-management-system/actions/runs/43623547770) |
+
+No retest was required. No defect ID was raised against any of the above runs.
+
+---
+
+## 8. CI evidence summary
+
+| Activity | Artifact | CI run | Result |
+| --- | --- | --- | --- |
+| Sprint 1 — authentication and student management | `accounts/tests.py`, `students/tests.py`, `students/test_integration.py`, `students/test_security.py` | [#40696524346](https://github.com/SE-TEAM11-HMS/hostel-management-system/actions/runs/40696524346) | 61/61 passed |
+| Security hardening and TC-SEC-001 to TC-SEC-006 | `docs/HOSTEL-39-security-test-report.md` | [#245](https://github.com/SE-TEAM11-HMS/hostel-management-system/actions/runs/42785878509) | Passed |
+| Functional room and allocation — TC-007 to TC-017 | `docs/HOSTEL-40-functional-test-report.md` | [#254](https://github.com/SE-TEAM11-HMS/hostel-management-system/actions/runs/43616388354) | Passed |
+| MySQL integration | `docs/HOSTEL-41-mysql-integration-report.md` | [#261](https://github.com/SE-TEAM11-HMS/hostel-management-system/actions/runs/43618572521) | Passed |
+| NFR — TC-NFR-001 to TC-NFR-006 | `docs/HOSTEL-42-non-functional-test-report.md` | [#270](https://github.com/SE-TEAM11-HMS/hostel-management-system/actions/runs/43620655695) | Passed / A |
+| Acceptance — AT-001 to AT-016 | `docs/HOSTEL-43-acceptance-test-report.md` | [#280](https://github.com/SE-TEAM11-HMS/hostel-management-system/actions/runs/43623547770) | 16/16 passed |
+
+---
+
+## 9. Notes
+
+1. P indicates that the listed automated test evidence passed in the referenced CI run.
+2. A indicates that automated evidence exists but a stated limitation (usability study, production uptime monitoring) prevents full verification in the CI environment.
+3. NT would indicate a requirement with no test evidence; no requirement in this RTM carries NT status.
+4. Test identifiers use the format `module/file.py::ClassName.method_name` matching Django's test runner and pytest discovery conventions.
+5. AT-004, AT-012 and AT-013 requirement mappings have been corrected against SRS §6.2; the prior Sprint 2 acceptance RTM (`RTM_Sprint2_Acceptance.md`) listed narrower mappings that did not reflect all SRS §6.2 links.
+6. Production HTTPS, HSTS, reverse-proxy configuration and external security scanning require verification in the deployed environment as noted in `docs/HOSTEL-38-security-review.md`.
