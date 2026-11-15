@@ -1,52 +1,21 @@
-
 {% extends "accounts/base.html" %}
-
+{% block title %}Room {{ room.room_number }} | HostelHQ{% endblock %}
+{% block section_label %}HOSTEL MANAGEMENT{% endblock %}
+{% block page_title %}Room details{% endblock %}
+{% block page_subtitle %}<p class="topbar-subtitle">Review this room's capacity, occupancy, and hostel information.</p>{% endblock %}
+{% block header_actions %}<a class="button button-secondary" href="{% url 'rooms:room_list' %}">← Back to rooms</a>{% endblock %}
 {% block content %}
-<div class="container mt-4">
-    <h2>Room Details</h2>
-
-    <div class="card mt-3">
-        <div class="card-header">
-            <h4>Room {{ room.room_number }}</h4>
-        </div>
-
-        <div class="card-body">
-            <table class="table table-bordered">
-                <tr>
-                    <th>Hostel Name</th>
-                    <td>{{ room.hostel.name }}</td>
-                </tr>
-                <tr>
-                    <th>Block</th>
-                    <td>{{ room.hostel.block }}</td>
-                </tr>
-                <tr>
-                    <th>Room Number</th>
-                    <td>{{ room.room_number }}</td>
-                </tr>
-                <tr>
-                    <th>Total Capacity</th>
-                    <td>{{ room.capacity }}</td>
-                </tr>
-                <tr>
-                    <th>Occupied Count</th>
-                    <td>{{ room.occupied_count }}</td>
-                </tr>
-                <tr>
-                    <th>Available Beds</th>
-                    <td>{{ room.available_beds }}</td>
-                </tr>
-            </table>
-
-            <a href="{% url 'rooms:available_rooms' %}"
-               class="btn btn-primary">Available Rooms</a>
-
-            <a href="{% url 'rooms:occupied_rooms' %}"
-               class="btn btn-secondary">Occupied Rooms</a>
-
-            <a href="{% url 'rooms:room_list' %}"
-               class="btn btn-outline-dark">Back to Room Management</a>
-        </div>
-    </div>
-</div>
+<div class="detail-hero"><span class="detail-avatar" aria-hidden="true">⌂</span><div><h2>Room {{ room.room_number }}</h2><p>{{ room.hostel.name }} <span aria-hidden="true">·</span> {{ room.hostel.block }}</p></div><div class="detail-actions"><a class="button button-secondary" href="{% url 'rooms:room_edit' room.id %}">Edit room</a></div></div>
+<section class="panel directory-panel">
+    <div class="panel-heading"><div><h2>Capacity and occupancy</h2><p>Current room status.</p></div><span class="year-badge">{{ room.available_beds }} bed{{ room.available_beds|pluralize }} available</span></div>
+    <div class="table-wrap"><table class="student-table"><tbody>
+        <tr><th>Hostel Name</th><td>{{ room.hostel.name }}</td></tr>
+        <tr><th>Block</th><td>{{ room.hostel.block }} Block</td></tr>
+        <tr><th>Room Number</th><td>{{ room.room_number }}</td></tr>
+        <tr><th>Total Capacity</th><td>{{ room.capacity }}</td></tr>
+        <tr><th>Occupied Count</th><td>{{ room.occupied_count }}</td></tr>
+        <tr><th>Available Beds</th><td>{{ room.available_beds }}</td></tr>
+    </tbody></table></div>
+</section>
+<div class="form-actions"><a class="button" href="{% url 'rooms:available_rooms' %}">Available rooms</a><a class="button button-secondary" href="{% url 'rooms:occupied_rooms' %}">Occupied rooms</a></div>
 {% endblock %}

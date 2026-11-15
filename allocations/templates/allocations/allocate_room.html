@@ -1,56 +1,26 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Allocate Room</title>
-</head>
-<body>
-    <h1>Allocate Room to Student</h1>
-
-    {% if messages %}
-        {% for message in messages %}
-            <p>{{ message }}</p>
-        {% endfor %}
-    {% endif %}
-
-    <form method="POST" action="{% url 'allocations:allocate_room' %}">
-        {% csrf_token %}
-
-        <div>
-            <label for="student_id">Select Student:</label>
-            <select name="student_id" id="student_id" required>
-                <option value="">-- Select Student --</option>
-                {% for student in students %}
-                    <option value="{{ student.id }}">
-                        {{ student.usn }} - {{ student.name }}
-                    </option>
-                {% empty %}
-                    <option value="" disabled>No eligible students available</option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <br>
-
-        <div>
-            <label for="room_id">Select Available Room:</label>
-            <select name="room_id" id="room_id" required>
-                <option value="">-- Select Room --</option>
-                {% for room in rooms %}
-                    <option value="{{ room.id }}">
-                        {{ room.hostel.name }} - Room {{ room.room_number }}
-                        ({{ room.available_beds }} beds available)
-                    </option>
-                {% empty %}
-                    <option value="" disabled>No available rooms</option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <br>
-
-        <button type="submit">Allocate Room</button>
-    </form>
-</body>
-</html>
+{% extends "accounts/base.html" %}
+{% block title %}Room allocation | HostelHQ{% endblock %}
+{% block section_label %}ROOM ALLOCATION{% endblock %}
+{% block page_title %}Allocate Room to Student{% endblock %}
+{% block page_subtitle %}<p class="topbar-subtitle">Assign an eligible student to a room with available capacity.</p>{% endblock %}
+{% block content %}
+<div class="page-intro"><div><h2>New room allocation</h2><p>Select a student and an available room. Occupancy updates after the allocation is saved.</p></div></div>
+<section class="form-layout">
+    <div class="panel form-panel">
+        <div class="form-intro"><h2>Allocation details</h2><p>Choose one student and one room to create an active allocation.</p></div>
+        {% if students and rooms %}
+            <form method="post" action="{% url 'allocations:allocate_room' %}" class="styled-form">
+                {% csrf_token %}
+                <div class="form-grid">
+                    <div class="form-field"><label for="student_id">Student</label><select name="student_id" id="student_id" required><option value="">Select a student</option>{% for student in students %}<option value="{{ student.id }}">{{ student.usn }} — {{ student.name }}</option>{% endfor %}</select><small class="form-help">Only students without an active room allocation are listed.</small></div>
+                    <div class="form-field"><label for="room_id">Available room</label><select name="room_id" id="room_id" required><option value="">Select a room</option>{% for room in rooms %}<option value="{{ room.id }}">{{ room.hostel.name }} — Room {{ room.room_number }} ({{ room.available_beds }} bed{{ room.available_beds|pluralize }} available)</option>{% endfor %}</select><small class="form-help">Only rooms with at least one available bed are listed.</small></div>
+                </div>
+                <div class="form-actions"><button class="button" type="submit">Allocate room <span aria-hidden="true">→</span></button><a class="button button-secondary" href="{% url 'rooms:room_list' %}">View rooms</a></div>
+            </form>
+        {% else %}
+            <div class="empty-state"><span class="empty-icon" aria-hidden="true">⇄</span><h3>Allocation setup needed</h3><p>{% if not students and not rooms %}Add an unallocated student and a room with available beds before creating an allocation.{% elif not students %}All students already have active allocations. Add a student or review existing allocations.{% else %}There are no rooms with available beds. Add a room or increase room capacity first.{% endif %}</p><a class="button" href="{% url 'rooms:room_list' %}">Open hostel and rooms</a></div>
+        {% endif %}
+    </div>
+    <aside class="helper-card"><span class="helper-icon" aria-hidden="true">✓</span><h3>Allocation rules</h3><p>The system protects occupancy and allocation consistency.</p><ul><li>A student can have only one active room allocation.</li><li>A room cannot be allocated beyond its capacity.</li><li>Room occupancy is updated when allocations change or are vacated.</li></ul></aside>
+</section>
+{% endblock %}
