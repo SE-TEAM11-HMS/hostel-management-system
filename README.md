@@ -231,6 +231,24 @@ Run only the security tests:
 python manage.py test students.test_security
 ```
 
+Run the new room-model unit tests and end-to-end system workflow test individually:
+
+```bash
+python manage.py test rooms.test_unit
+python manage.py test students.test_system
+```
+
+To measure application code coverage, install the development requirements and run:
+
+```bash
+pip install -r requirements-dev.txt
+coverage run manage.py test
+coverage report -m
+coverage html
+```
+
+The HTML report is written to `htmlcov/index.html`. GitHub Actions runs the full suite under coverage and uploads the HTML/XML reports as a workflow artifact.
+
 The test suite uses Django's test runner which creates a temporary MySQL test database and destroys it after the run. No data in `hostel_db` is affected.
 
 ---
@@ -241,10 +259,10 @@ The CI workflow (`.github/workflows/ci.yml`) runs automatically on every push an
 
 1. Starts a MySQL 8.0 service container.
 2. Installs Python 3.14 and MySQL system dependencies.
-3. Installs Python dependencies from `requirements.txt`.
+3. Installs the application and development dependencies from `requirements-dev.txt`.
 4. Runs `python manage.py check`.
 5. Applies migrations with `python manage.py migrate`.
-6. Runs the full test suite with `python manage.py test`.
+6. Runs the full test suite under `coverage.py`, prints a coverage summary, and uploads HTML/XML coverage reports.
 
 All CI credentials are set as environment variables in the workflow file. No real password or secret is stored in the repository.
 
@@ -311,6 +329,7 @@ hostel-management-system/
 | Requirements Traceability Matrix — Sprint 1 | [View document](docs/RTM_Sprint1.md) |
 | Requirements Traceability Matrix — Sprint 2 Final | [View document](docs/HOSTEL-45-rtm-sprint2-final.md) |
 | Final Test Summary Report | [View document](docs/HOSTEL-46-final-test-summary-report.md) |
+| Unit and System Test Report with Code Coverage | [View report](docs/UNIT_SYSTEM_TEST_REPORT.md) |
 | Sprint 2 Acceptance RTM | [View document](docs/RTM_Sprint2_Acceptance.md) |
 | Sprint 1 Demo Video | [Watch video](docs/sprint1_demo.mp4) |
 
