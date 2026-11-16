@@ -1,59 +1,22 @@
-
 {% extends "accounts/base.html" %}
-
-{% block title %}Change Student Room{% endblock %}
-
-{% block section_label %}Room Management{% endblock %}
-
-{% block page_title %}Change Student Room{% endblock %}
-
-{% block page_subtitle %}
-Move a student from their current room to another available room.
-{% endblock %}
-
+{% block title %}Change student room | HostelHQ{% endblock %}
+{% block section_label %}ROOM ALLOCATION{% endblock %}
+{% block page_title %}Change student room{% endblock %}
+{% block page_subtitle %}<p class="topbar-subtitle">Move a student from their current room to another room with available capacity.</p>{% endblock %}
 {% block content %}
-<div class="content-card">
-    <h2>Student Details</h2>
-
-    <p><strong>Name:</strong> {{ student.name }}</p>
-    <p><strong>USN:</strong> {{ student.usn }}</p>
-    <p>
-        <strong>Current Room:</strong>
-        {{ allocation.room }}
-    </p>
-
-    <hr>
-
-    <h2>Select New Room</h2>
-
-    {% if rooms %}
-        <form method="post">
-            {% csrf_token %}
-
-            <label for="room_id">Available Rooms</label>
-
-            <select name="room_id" id="room_id" required>
-                <option value="">-- Select a room --</option>
-
-                {% for room in rooms %}
-                    <option value="{{ room.id }}">
-                        {{ room.hostel.name }} -
-                        Room {{ room.room_number }}
-                        ({{ room.available_beds }} beds available)
-                    </option>
-                {% endfor %}
-            </select>
-
-            <button type="submit">Change Room</button>
-        </form>
-    {% else %}
-        <p>No other rooms currently have available beds.</p>
-    {% endif %}
-
-    <p>
-        <a href="{% url 'allocations:allocate_room' %}">
-            Back to Room Allocation
-        </a>
-    </p>
-</div>
+<div class="detail-hero"><span class="detail-avatar" aria-hidden="true">{{ student.name|first|upper }}</span><div><h2>{{ student.name }}</h2><p>{{ student.usn }} <span aria-hidden="true">·</span> Current room: {{ allocation.room.hostel.name }} — {{ allocation.room.room_number }}</p></div><a class="button button-secondary detail-actions" href="{% url 'student_room' student.pk %}">View room details</a></div>
+<section class="form-layout">
+    <div class="panel form-panel">
+        <div class="form-intro"><h2>Select a new room</h2><p>The current room is excluded from the choices.</p></div>
+        {% if rooms %}
+            <form method="post" class="styled-form">{% csrf_token %}
+                <div class="form-field"><label for="room_id">Available room</label><select name="room_id" id="room_id" required><option value="">Select a room</option>{% for room in rooms %}<option value="{{ room.id }}">{{ room.hostel.name }} — Room {{ room.room_number }} ({{ room.available_beds }} bed{{ room.available_beds|pluralize }} available)</option>{% endfor %}</select></div>
+                <div class="form-actions"><button class="button" type="submit">Change room <span aria-hidden="true">→</span></button><a class="button button-secondary" href="{% url 'allocations:allocate_room' %}">Back to allocations</a></div>
+            </form>
+        {% else %}
+            <div class="empty-state"><span class="empty-icon" aria-hidden="true">⌂</span><h3>No other rooms available</h3><p>Add capacity or make another room available before changing this student's room.</p><a class="button" href="{% url 'rooms:room_list' %}">Manage rooms</a></div>
+        {% endif %}
+    </div>
+    <aside class="helper-card"><span class="helper-icon" aria-hidden="true">i</span><h3>Room change</h3><p>When the change is saved, the active allocation moves to the selected room and occupancy is recalculated.</p></aside>
+</section>
 {% endblock %}

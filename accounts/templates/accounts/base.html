@@ -11,7 +11,7 @@
 <body class="app-body">
 <div class="app-shell">
     <aside class="sidebar">
-        <a class="brand" href="{% url 'accounts:dashboard' %}" aria-label="Hostel Management System home">
+        <a class="brand" href="{% if request.user.is_staff %}{% url 'accounts:dashboard' %}{% else %}{% url 'student_portal' %}{% endif %}" aria-label="Hostel Management System home">
             <span class="brand-mark" aria-hidden="true">H</span>
             <span class="brand-copy">
                 <strong>Hostel<span>HQ</span></strong>
@@ -20,47 +20,66 @@
         </a>
 
         <div class="sidebar-divider"></div>
-        <p class="nav-caption">WORKSPACE</p>
+        <p class="nav-caption">{% if request.user.is_staff %}WORKSPACE{% else %}STUDENT MENU{% endif %}</p>
         <nav class="sidebar-nav" aria-label="Main navigation">
-            <a class="nav-item{% if request.resolver_match.url_name == 'dashboard' %} active{% endif %}" href="{% url 'accounts:dashboard' %}">
-                <span class="nav-icon" aria-hidden="true">⌂</span>
-                <span>Overview</span>
-            </a>
-            <a class="nav-item{% if request.resolver_match.url_name == 'student_list' or request.resolver_match.url_name == 'student_detail' or request.resolver_match.url_name == 'student_update' or request.resolver_match.url_name == 'student_confirm_delete' or request.resolver_match.url_name == 'student_delete' %} active{% endif %}" href="{% url 'student_list' %}">
-                <span class="nav-icon" aria-hidden="true">▤</span>
-                <span>Student records</span>
-            </a>
-            <a class="nav-item{% if request.resolver_match.url_name == 'student_add' %} active{% endif %}" href="{% url 'student_add' %}">
-                <span class="nav-icon" aria-hidden="true">＋</span>
-                <span>Add a student</span>
-            </a>
+            {% if request.user.is_staff %}
+                <a class="nav-item{% if request.resolver_match.url_name == 'dashboard' %} active{% endif %}" href="{% url 'accounts:dashboard' %}">
+                    <span class="nav-icon" aria-hidden="true">⌂</span>
+                    <span>Overview</span>
+                </a>
+                <a class="nav-item{% if request.resolver_match.url_name == 'student_list' or request.resolver_match.url_name == 'student_detail' or request.resolver_match.url_name == 'student_update' or request.resolver_match.url_name == 'student_confirm_delete' or request.resolver_match.url_name == 'student_delete' or request.resolver_match.url_name == 'student_room' %} active{% endif %}" href="{% url 'student_list' %}">
+                    <span class="nav-icon" aria-hidden="true">▤</span>
+                    <span>Student records</span>
+                </a>
+                <a class="nav-item{% if request.resolver_match.url_name == 'student_add' %} active{% endif %}" href="{% url 'student_add' %}">
+                    <span class="nav-icon" aria-hidden="true">＋</span>
+                    <span>Add a student</span>
+                </a>
+                <a class="nav-item{% if request.resolver_match.url_name == 'room_list' or request.resolver_match.url_name == 'hostel_add' or request.resolver_match.url_name == 'room_add' or request.resolver_match.url_name == 'room_edit' or request.resolver_match.url_name == 'room_detail' or request.resolver_match.url_name == 'available_rooms' or request.resolver_match.url_name == 'occupied_rooms' %} active{% endif %}" href="{% url 'rooms:room_list' %}">
+                    <span class="nav-icon" aria-hidden="true">⌂</span>
+                    <span>Hostels &amp; rooms</span>
+                </a>
+                <a class="nav-item{% if request.resolver_match.url_name == 'allocate_room' or request.resolver_match.url_name == 'change_room' or request.resolver_match.url_name == 'vacate_room' %} active{% endif %}" href="{% url 'allocations:allocate_room' %}">
+                    <span class="nav-icon" aria-hidden="true">⇄</span>
+                    <span>Room allocation</span>
+                </a>
+            {% else %}
+                <a class="nav-item{% if request.resolver_match.url_name == 'student_portal' %} active{% endif %}" href="{% url 'student_portal' %}">
+                    <span class="nav-icon" aria-hidden="true">⌂</span>
+                    <span>My dashboard</span>
+                </a>
+                <a class="nav-item{% if request.resolver_match.url_name == 'student_portal_room' %} active{% endif %}" href="{% url 'student_portal_room' %}">
+                    <span class="nav-icon" aria-hidden="true">▤</span>
+                    <span>My room</span>
+                </a>
+            {% endif %}
         </nav>
 
         <div class="sidebar-spacer"></div>
         <div class="sidebar-status">
-            <span class="status-dot" aria-hidden="true"></span>
+            <span class="status-dot"></span>
             <span><strong>Workspace active</strong><small>Local development environment</small></span>
         </div>
         <div class="sidebar-profile">
             <span class="profile-avatar">{{ request.user.username|first|upper }}</span>
-            <span class="profile-copy"><strong>{{ request.user.username }}</strong><small>Administrator</small></span>
+            <span class="profile-copy"><strong>{{ request.user.username }}</strong><small>{% if request.user.is_staff %}Administrator{% else %}Student{% endif %}</small></span>
         </div>
         <form method="post" action="{% url 'accounts:logout' %}" class="sidebar-logout">
             {% csrf_token %}
             <button type="submit" class="logout-button"><span aria-hidden="true">↪</span> Sign out</button>
         </form>
-        <p class="sidebar-footnote">Hostel Management System<br>Team 11 · Sprint 1</p>
+        <p class="sidebar-footnote">Hostel Management System<br>Team 11 · Sprint 1 &amp; 2</p>
     </aside>
 
     <div class="app-main">
         <header class="topbar">
             <div class="topbar-heading">
-                <p class="eyebrow">HOSTEL OPERATIONS <span>/</span> {% block section_label %}OVERVIEW{% endblock %}</p>
+                <p class="eyebrow">{% if request.user.is_staff %}HOSTEL OPERATIONS{% else %}STUDENT PORTAL{% endif %} <span>/</span> {% block section_label %}OVERVIEW{% endblock %}</p>
                 <h1>{% block page_title %}Overview{% endblock %}</h1>
                 {% block page_subtitle %}<p class="topbar-subtitle">Your administrative workspace.</p>{% endblock %}
             </div>
             <div class="topbar-right">
-                <div class="system-pill"><span class="status-dot" aria-hidden="true"></span> System available</div>
+                <div class="system-pill"><span class="status-dot"></span> {% if request.user.is_staff %}System available{% else %}Student account{% endif %}</div>
                 <span class="topbar-avatar" aria-hidden="true">{{ request.user.username|first|upper }}</span>
             </div>
             {% block header_actions %}{% endblock %}
@@ -83,7 +102,7 @@
             </main>
             <footer class="app-footer">
                 <span>HostelHQ <span class="footer-dot">·</span> Hostel Management System</span>
-                <span>Secure student administration</span>
+                <span>{% if request.user.is_staff %}Secure student administration{% else %}Your student accommodation{% endif %}</span>
             </footer>
         </div>
     </div>

@@ -1,4 +1,4 @@
-/* HostelHQ interface — responsive styling for the existing Sprint 1 features. */
+/* HostelHQ interface — shared responsive design system based on the Sprint 1 visual language. */
 :root {
     color-scheme: light;
     --navy-950: #0b1730;
@@ -392,3 +392,13 @@ button:disabled { cursor: not-allowed; opacity: .65; }
     text-decoration: none;
 }
 .text-link:hover { color: var(--navy-800); text-decoration: underline; }
+
+/* Shared filter row for room directories */
+.filter-form { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 12px; padding: 18px 22px; border-bottom: 1px solid #e8eef6; background: #fbfcff; }
+.filter-form .form-field { flex: 1 1 260px; max-width: 480px; }
+.filter-form .button { min-height: 43px; white-space: nowrap; }
+@media (max-width: 520px) {
+    .filter-form { align-items: stretch; flex-direction: column; padding: 15px; }
+    .filter-form .form-field { flex-basis: auto; max-width: none; }
+    .filter-form .button { width: 100%; }
+}
