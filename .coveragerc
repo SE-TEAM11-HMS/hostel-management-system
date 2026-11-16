@@ -1,0 +1,15 @@
+[run]
+branch = True
+source =
+    accounts
+    students
+    rooms
+    allocations
+omit =
+    */migrations/*
+    */test_*.py
+    */tests.py
+
+[report]
+show_missing = True
+precision = 2
